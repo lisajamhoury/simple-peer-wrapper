@@ -1,0 +1,22 @@
+{
+  "name": "browser_client",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify src/index.js > dist/main.js",
+    "watch": "watchify src/index.js -o dist/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^16.5.0",
+    "watchify": "^3.11.1"
+  },
+  "dependencies": {
+    "simple-peer": "^9.6.0",
+    "socket.io-client": "^2.3.0"
+  }
+}

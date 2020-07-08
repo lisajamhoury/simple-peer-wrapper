@@ -1,0 +1,1 @@
+require('./webrtc_peer_client.js');
