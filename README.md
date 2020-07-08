@@ -1,4 +1,4 @@
-# Browser to Browser Connection with Simple Peer, Socket.io, & Express
+# Browser to Browser Connection with Simple Peer, Socket.io and Express
 
 This combines an Express Server with [Realtime Communication with WebRTC](https://codelabs.developers.google.com/codelabs/webrtc-web/#0) Socket.io Signal Server from Codelabs, and [Simple Peer](https://github.com/feross/simple-peer).
 
