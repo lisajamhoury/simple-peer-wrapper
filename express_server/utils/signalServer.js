@@ -4,7 +4,7 @@ const log = function (message) {
   if (!DEBUG) {
     return;
   }
-  log(message);
+  console.log(message);
 };
 
 const handleMessage = function (message, socket) {
