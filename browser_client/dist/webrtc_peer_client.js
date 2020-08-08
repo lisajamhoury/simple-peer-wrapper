@@ -1,4 +1,4 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.WebRTCPeerClient = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -14283,7 +14283,16 @@ yeast.decode = decode;
 module.exports = yeast;
 
 },{}],73:[function(require,module,exports){
-require('./webrtc_peer_client.js');
+const WebRTCPeerClient = require('./webrtc_peer_client.js');
+
+module.exports = {
+  init: WebRTCPeerClient.init,
+  isInitiator: WebRTCPeerClient.isInitiator,
+  sendData: WebRTCPeerClient.sendData,
+  getData: WebRTCPeerClient.getData,
+  isPeerStarted: WebRTCPeerClient.isPeerStarted,
+};
+
 },{"./webrtc_peer_client.js":75}],74:[function(require,module,exports){
 /////////////////// Turn Server Used if Not on LocaHost — I have not tested this  ///////////////////
 
@@ -14358,11 +14367,8 @@ const socket = io.connect('http://localhost:80');
 const turnRequest = require('./turnRequest');
 turnRequest();
 
-let peer;
-
-let localVideo = document.querySelector('#localVideo');
-let remoteVideo = document.querySelector('#remoteVideo');
-let localStream;
+let peer = null;
+let newData = null;
 
 let initiator = false; // which client initiates the communication
 let roomReady = false; // socket.io room is created or joined
@@ -14389,7 +14395,6 @@ const startSocketCommunication = () => {
 
 const handleCreated = (room) => {
   log('Created room ' + room);
-  initiator = true;
 };
 
 // room only holds two clients, can be changed in signal_socket.js
@@ -14401,6 +14406,7 @@ const handleFullRoom = (room) => {
 const handleJoinRoom = (room) => {
   log('Another peer made a request to join room ' + room);
   log('This peer is the initiator of room ' + room + '!');
+  initiator = true;
   roomReady = true;
 };
 
@@ -14417,20 +14423,21 @@ const handleLog = (array) => {
 
 // This client receives a message
 const handleMessage = (message) => {
-  log('MESSAGE', message);
+  log('MESSAGE ' + message);
 
   if (message.type) {
-    log('received msg typ ', message.type);
+    log('received msg typ ' + message.type);
   } else {
-    log('Client received message:', message);
+    log('Client received message: ' + message);
   }
 
-  if (message === 'got user media') {
+  if (message === 'initiate peer') {
     attemptPeerStart();
   } else if (message.type === 'sending signal') {
     log('receiving simple signal data');
 
-    if (!peer) {
+    if (!peerStarted) {
+      console.log('Creating peer from messages!');
       createPeerConnection(initiator);
       peer.signal(message.data);
     } else {
@@ -14452,7 +14459,7 @@ const initSocketClient = function () {
   startSocketCommunication();
 };
 
-const sendMessage = (message) => {
+const emitSocketMessage = (message) => {
   log('Client sending message: ', message);
   socket.emit('message', message);
 };
@@ -14464,7 +14471,7 @@ initSocketClient();
 const sendSignal = (data) => {
   log('sending signal');
 
-  sendMessage({
+  emitSocketMessage({
     type: 'sending signal',
     data: JSON.stringify(data),
   });
@@ -14475,7 +14482,7 @@ const handleConnection = (data) => {
 };
 
 const handleStream = (stream) => {
-  remoteVideo.srcObject = stream;
+  // remoteVideo.srcObject = stream;
 };
 
 const handleError = (err) => {
@@ -14483,13 +14490,15 @@ const handleError = (err) => {
 };
 
 const handleData = (data) => {
-  log('got data', data);
+  let str = new TextDecoder('utf-8').decode(data);
+  let dat = JSON.parse(str);
+  newData = dat.message;
 };
 
 const handleClose = () => {
   log('Hanging up.');
   closePeerConnection();
-  sendMessage('bye');
+  emitSocketMessage('bye');
 };
 
 const handleRemoteHangup = () => {
@@ -14509,7 +14518,6 @@ function createPeerConnection(isInit) {
 
   peer = new Peer({
     initiator: isInit,
-    stream: localStream,
   });
 
   // If initiator,peer.on'signal' will fire right away, if not it waits for signal
@@ -14528,53 +14536,59 @@ const isPeerStarted = () => {
   return peerStarted;
 };
 
-// const sendData = (data) => {
-//   console.log('attempting send');
-//   console.log(peer);
-//   // peer.send(data);
-// };
+const sendData = (data) => {
+  let msg = JSON.stringify({ message: data });
+
+  if (peer.connected) {
+    peer.write(msg);
+  }
+};
+
+const getData = () => {
+  if (newData !== null) {
+    return newData;
+  } else {
+    return null;
+  }
+};
 
 window.onbeforeunload = () => {
-  sendMessage('bye');
+  emitSocketMessage('bye');
 };
 
 /////////////////// getUserMedia starts video and starts Simple Peer on Connection  ///////////////////
-
-const gotStream = (stream) => {
-  log('Adding local stream.');
-  localStream = stream;
-  localVideo.srcObject = stream;
-  sendMessage('got user media');
-  if (initiator) {
-    attemptPeerStart();
-  }
-};
 
 const attemptPeerStart = () => {
   log('Attempting peer start', peerStarted, roomReady);
   if (!peerStarted && roomReady) {
     log('Creating peer connection');
-    log('initiator', initiator);
+    // log('initiator', initiator);
+    // console.log('YES creating from attempt peer start');
     createPeerConnection(initiator);
   } else {
+    // console.log('NOT creating from attempt peer start');
     log('Not creating peer connection');
   }
 };
 
-navigator.mediaDevices
-  .getUserMedia({
-    audio: false,
-    video: true,
-  })
-  .then(gotStream)
-  .catch(function (e) {
-    alert('getUserMedia() error: ' + e.name);
-  });
+const init = () => {
+  emitSocketMessage('initiate peer');
+  if (initiator) {
+    attemptPeerStart();
+  }
+};
 
-window.WebRTCPeerClient = {
-  gotStream: gotStream,
-  // sendData: sendData,
+const isInitiator = () => {
+  return initiator;
+};
+
+module.exports = {
+  init: init,
+  isInitiator: isInitiator,
+  sendData: sendData,
+  getData: getData,
   isPeerStarted: isPeerStarted,
 };
 
-},{"./turnRequest":74,"simple-peer":41,"socket.io-client":57}]},{},[73]);
+},{"./turnRequest":74,"simple-peer":41,"socket.io-client":57}]},{},[73])(73)
+});

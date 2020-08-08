@@ -1,1 +1,0 @@
-../../../browser_client/dist/main.js

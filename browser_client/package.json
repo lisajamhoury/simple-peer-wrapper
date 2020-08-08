@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify src/index.js > dist/main.js",
-    "watch": "watchify src/index.js -o dist/main.js"
+    "build": "browserify src/index.js --standalone WebRTCPeerClient > dist/webrtc_peer_client.js",
+    "watch": "watchify src/index.js --standalone WebRTCPeerClient -o dist/webrtc_peer_client.js"
   },
   "keywords": [],
   "author": "",
