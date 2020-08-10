@@ -1,6 +1,7 @@
 const io = require('socket.io-client');
 let Peer = require('simple-peer');
-const socket = io.connect('http://localhost:80');
+// const socket = io.connect('http://localhost:80'); //
+const socket = io.connect('http://f54b8ef193dd.ngrok.io');
 
 const turnRequest = require('./turnRequest');
 turnRequest();
