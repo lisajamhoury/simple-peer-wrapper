@@ -1,7 +1,8 @@
 const WebRTCPeerClient = require('./webrtc_peer_client.js');
 
 module.exports = {
-  init: WebRTCPeerClient.init,
+  initSocketClient: WebRTCPeerClient.initSocketClient,
+  initPeerClient: WebRTCPeerClient.initPeerClient,
   isInitiator: WebRTCPeerClient.isInitiator,
   sendData: WebRTCPeerClient.sendData,
   getData: WebRTCPeerClient.getData,

@@ -26,12 +26,15 @@ function setup() {
   createCanvas(500, 500);
   frameRate(30);
 
-  // create a button to star the peer
-  startPeer = createButton('Start Peer');
-  startPeer.mousePressed(WebRTCPeerClient.init);
+  // start socket client automatically on load
+  // by default it connects to http://localhost:80
+  WebRTCPeerClient.initSocketClient();
 
-  // start peer automatically on load
-  WebRTCPeerClient.init();
+  // to connect to server remotely pass the ngrok address
+  // WebRTCPeerClient.initSocketClient('http://f54b8ef193dd.ngrok.io');
+
+  // start the peer client
+  WebRTCPeerClient.initPeerClient();
 }
 
 function update() {
@@ -153,8 +156,6 @@ function touching(mouse1, mouse2) {
 
 function keyTyped() {
   console.log('pressed ' + key);
-
-  // use switch?]
 
   switch (key) {
     case '1':

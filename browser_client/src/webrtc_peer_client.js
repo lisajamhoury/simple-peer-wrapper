@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 let Peer = require('simple-peer');
-// const socket = io.connect('http://localhost:80'); //
-const socket = io.connect('http://f54b8ef193dd.ngrok.io');
+
+let socket;
 
 const turnRequest = require('./turnRequest');
 turnRequest();
@@ -87,7 +87,17 @@ const handleMessage = (message) => {
   }
 };
 
-const initSocketClient = function () {
+const initSocketClient = function (serverUrl) {
+  console.log('connecting to ', serverUrl);
+  let socketServerUrl = 'http://localhost:80';
+
+  if (typeof serverUrl !== 'undefined') {
+    socketServerUrl = serverUrl;
+  }
+
+  socket = io.connect(socketServerUrl);
+  // const socket = io.connect('http://f54b8ef193dd.ngrok.io');
+
   socket.on('created', (room) => handleCreated(room));
   socket.on('full', (room) => handleFullRoom(room));
   socket.on('join', (room) => handleJoinRoom(room));
@@ -102,8 +112,6 @@ const emitSocketMessage = (message) => {
   log('Client sending message: ', message);
   socket.emit('message', message);
 };
-
-initSocketClient();
 
 /////////////////// Peer Connection Via Simple Peer  ///////////////////
 
@@ -210,7 +218,7 @@ const attemptPeerStart = () => {
   }
 };
 
-const init = () => {
+const initPeerClient = () => {
   emitSocketMessage('initiate peer');
   if (initiator) {
     attemptPeerStart();
@@ -222,7 +230,8 @@ const isInitiator = () => {
 };
 
 module.exports = {
-  init: init,
+  initSocketClient: initSocketClient,
+  initPeerClient: initPeerClient,
   isInitiator: isInitiator,
   sendData: sendData,
   getData: getData,
