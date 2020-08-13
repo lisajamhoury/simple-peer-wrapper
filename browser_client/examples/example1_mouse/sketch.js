@@ -1,4 +1,11 @@
 // p5 code goes here
+
+// include this for to use autofill in vscode
+// see https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
+/// <reference path="../shared/p5.d/p5.d.ts" />
+/// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
+
+// peer variables
 let startPeer;
 let partnerMousePosition;
 let myMousePosition = {};
