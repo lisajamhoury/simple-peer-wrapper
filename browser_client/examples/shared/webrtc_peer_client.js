@@ -1,0 +1,1 @@
+../../dist/webrtc_peer_client.js
