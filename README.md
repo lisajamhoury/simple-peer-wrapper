@@ -47,22 +47,22 @@ Open http://localhost:3000 in your browser to see first client. Open http://loca
 
 The signal server runs on localhost at port 80 (http://127.0.0.1:80) by default. If you'd like to run the server on a public network you can run it with [ngrok](https://ngrok.com/). It takes less than five minutes to set up!
 
-1. Got to [ngrok.com](https://ngrok.com/) and setup an account.
+1. Go to [ngrok.com](https://ngrok.com/) and setup an account.
 2. Follow the three-step instructions under setup and installation (Unzip, connect, fire it up!)
 
-For Windows 10 users: For step 2 and 3 use `ngrok` rather than `./ngrok`, so the command would be `ngrok authtoken < your auth token >`. You can also double click on the ngrok icon to run on port 80 rather than using the command line for step 3.
+For Windows 10 users: For step 2 and 3 use `ngrok` rather than `./ngrok`, so the command for step 2 would be `ngrok authtoken < your auth token >`. You can also double click on the ngrok icon to run on port 80 rather than using the command line for step 3.
 
 3. Find your ngrok address and add it to your sketch code. For example:
 
-````
-# in file Browser-to-Browser-Simple-Peer-Express-Example/browser_client/examples/example1_mouse/sketch.js```)
+```
+# in file Browser-to-Browser-Simple-Peer-Express-Example/browser_client/examples/example1_mouse/sketch.js
 
 # Init signal server over localhost port 80
 WebRTCPeerClient.initSocketClient();
 
 # Init signal server on public internet with ngrok
 WebRTCPeerClient.initSocketClient('https://f54b8ef193dd.ngrok.io');
-````
+```
 
 ## License
 
