@@ -33,11 +33,11 @@ function setup() {
   createCanvas(500, 500);
   frameRate(30);
 
-  // start socket client automatically on load
+  // Start socket client automatically on load
   // by default it connects to http://localhost:80
   WebRTCPeerClient.initSocketClient();
 
-  // to connect to server remotely pass the ngrok address
+  // to connect to server over public internet pass the ngrok address
   // WebRTCPeerClient.initSocketClient('http://f54b8ef193dd.ngrok.io');
 
   // start the peer client
