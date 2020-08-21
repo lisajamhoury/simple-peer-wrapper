@@ -6,12 +6,10 @@ let socket;
 const turnRequest = require('./turnRequest');
 turnRequest();
 
-let peer = null;
 let newData = null;
 
-let initiator = false; // which client initiates the communication
-let roomReady = false; // socket.io room is created or joined
-let peerStarted = false; // the peer connection is started
+let connections = [];
+let initPeerRequest = false;
 
 const DEBUG = true;
 
@@ -26,10 +24,8 @@ const log = function (message) {
 
 // starts socket client communication with signal server automatically
 const startSocketCommunication = () => {
-  // define name of room here
-  const room = 'foo';
-  socket.emit('create or join', room);
-  log('Attempted to create or join room', room);
+  socket.emit('create or join');
+  log('Attempted to create or join room');
 };
 
 const handleCreated = (room) => {
@@ -45,19 +41,83 @@ const handleFullRoom = (room) => {
 const handleJoinRoom = (room) => {
   log('Another peer made a request to join room ' + room);
   log('This peer is the initiator of room ' + room + '!');
-  initiator = true;
-  roomReady = true;
+
+  logConnection(room, true, true, false);
+  if (initPeerRequest) {
+    log('initing peer from handle join');
+    initPeerClient();
+  }
 };
 
 // called by non-initiator client
 const handleJoinedRoom = (room) => {
   log('joined: ' + room);
   roomReady = true;
+
+  logConnection(room, false, true, false);
+  if (initPeerRequest) {
+    log('initing peer from handle joined');
+    initPeerClient();
+  }
+};
+
+const logConnection = (
+  _room,
+  _initiator,
+  _roomReady,
+  _peerStarted,
+) => {
+  log('logging connection');
+  const newConnection = {
+    room: _room, // socket.io server room
+    initiator: _initiator, // client initiates the communication
+    roomReady: _roomReady, // socket.io room is created or joined
+    peerStarted: _peerStarted, // the peer connection is started
+  };
+
+  connections.push(newConnection);
 };
 
 // logs messages from server
 const handleLog = (array) => {
   log.apply(console, array);
+};
+
+const handleInitPeer = (room) => {
+  const connection = findConnection(room);
+  attemptPeerStart(connection);
+};
+
+const handleSendSignal = (message) => {
+  log('receiving simple signal data');
+  const connection = findConnection(message.room);
+  log('found the connection, ' + connection.room);
+
+  if (!connection.peerStarted) {
+    console.log('Creating peer from messages!');
+    createPeerConnection(connection);
+    connection.peer.signal(message.data);
+  } else {
+    connection.peer.signal(message.data);
+  }
+};
+
+const findConnection = (room) => {
+  let connection = null;
+
+  for (let i = 0; i < connections.length; i++) {
+    if (connections[i].room === room) {
+      connection = connections[i];
+    }
+  }
+
+  if (connection === null) {
+    log('UT OH THAT CONNECTION DOESNT EXIST');
+  } else {
+    log('found the connection for room ' + room);
+  }
+
+  return connection;
 };
 
 // This client receives a message
@@ -70,38 +130,27 @@ const handleMessage = (message) => {
     log('Client received message: ' + message);
   }
 
-  if (message === 'initiate peer') {
-    attemptPeerStart();
-  } else if (message.type === 'sending signal') {
-    log('receiving simple signal data');
-
-    if (!peerStarted) {
-      console.log('Creating peer from messages!');
-      createPeerConnection(initiator);
-      peer.signal(message.data);
-    } else {
-      peer.signal(message.data);
-    }
-  } else if (message === 'bye' && peerStarted) {
-    handleRemoteHangup();
-  }
+  // TO DO HANDLE BYE
+  // } else if (message === 'bye' && peerStarted) {
+  //   handleRemoteHangup();
 };
 
 const initSocketClient = function (serverUrl) {
-  console.log('connecting to ', serverUrl);
   let socketServerUrl = 'http://localhost:80';
 
   if (typeof serverUrl !== 'undefined') {
     socketServerUrl = serverUrl;
   }
 
+  log('connecting socket to ' + socketServerUrl);
   socket = io.connect(socketServerUrl);
-  // const socket = io.connect('http://f54b8ef193dd.ngrok.io');
 
   socket.on('created', (room) => handleCreated(room));
   socket.on('full', (room) => handleFullRoom(room));
   socket.on('join', (room) => handleJoinRoom(room));
   socket.on('joined', (room) => handleJoinedRoom(room));
+  socket.on('initiate peer', (room) => handleInitPeer(room));
+  socket.on('sending signal', (message) => handleSendSignal(message));
   socket.on('log', (array) => handleLog(array));
   socket.on('message', (message) => handleMessage(message));
 
@@ -115,13 +164,15 @@ const emitSocketMessage = (message) => {
 
 /////////////////// Peer Connection Via Simple Peer  ///////////////////
 
-const sendSignal = (data) => {
+const sendSignal = (data, connection) => {
   log('sending signal');
 
-  emitSocketMessage({
-    type: 'sending signal',
+  const message = {
+    room: connection.room,
     data: JSON.stringify(data),
-  });
+  };
+
+  socket.emit('sending signal', message);
 };
 
 const handleConnection = (data) => {
@@ -137,57 +188,82 @@ const handleError = (err) => {
 };
 
 const handleData = (data) => {
-  let str = new TextDecoder('utf-8').decode(data);
-  let dat = JSON.parse(str);
-  newData = dat.message;
+  const decodedString = new TextDecoder('utf-8').decode(data);
+  const decodedJSON = JSON.parse(decodedString);
+  newData = decodedJSON;
+};
+
+const terminateSession = () => {
+  for (let i = 0; i < connections.length; i++) {
+    const peer = connections[i].peer;
+    peer.destroy(); // simple-peer method to close and cleanup peer connection
+    connections[i].peer = null;
+    connections[i].peerStarted = false;
+  }
+
+  // TO DO destroy socket and associated rooms
+  socket.emit('hangup');
+  socket.close();
+
+  // emitSocketMessage('hangup');
 };
 
 const handleClose = () => {
-  log('Hanging up.');
-  closePeerConnection();
-  emitSocketMessage('bye');
+  log('GOT CLOSE');
+  // closePeerConnection();
+  // emitSocketMessage('bye');
 };
 
 const handleRemoteHangup = () => {
-  log('Session terminated.');
-  closePeerConnection();
-  initiator = false;
+  // log('Session terminated.');
+  // closePeerConnection();
+  // initiator = false;
 };
 
 const closePeerConnection = () => {
-  peerStarted = false;
-  peer.destroy();
-  peer = null;
+  // peerStarted = false;
+  // peer.destroy();
+  // peer = null;
 };
 
-function createPeerConnection(isInit) {
+function createPeerConnection(connection) {
   log('creating simple peer');
 
-  peer = new Peer({
-    initiator: isInit,
+  const peer = new Peer({
+    initiator: connection.initiator,
   });
 
   // If initiator,peer.on'signal' will fire right away, if not it waits for signal
   // https://github.com/feross/simple-peer#peeronsignal-data--
-  peer.on('signal', (data) => sendSignal(data));
+  peer.on('signal', (data) => sendSignal(data, connection));
   peer.on('connect', (data) => handleConnection(data));
   peer.on('error', (err) => handleError(err));
   peer.on('stream', (stream) => handleStream(stream));
   peer.on('data', (data) => handleData(data));
   peer.on('close', () => handleClose());
 
-  peerStarted = true;
+  connection.peerStarted = true;
+  connection.peer = peer;
 }
 
 const isPeerStarted = () => {
+  let peerStarted = false;
+
+  // if any peer connection is not started then it returns false
+  for (let i = 0; i < connections.length; i++) {
+    peerStarted = connections[i].peerStarted;
+  }
   return peerStarted;
 };
 
 const sendData = (data) => {
-  let msg = JSON.stringify({ message: data });
+  let msg = JSON.stringify({ data: data, userId: socket.id });
 
-  if (peer.connected) {
-    peer.write(msg);
+  for (let i = 0; i < connections.length; i++) {
+    const peer = connections[i].peer;
+    if (peer.connected) {
+      peer.write(msg);
+    }
   }
 };
 
@@ -200,18 +276,22 @@ const getData = () => {
 };
 
 window.onbeforeunload = () => {
-  emitSocketMessage('bye');
+  terminateSession();
 };
 
 /////////////////// getUserMedia starts video and starts Simple Peer on Connection  ///////////////////
 
-const attemptPeerStart = () => {
-  log('Attempting peer start', peerStarted, roomReady);
-  if (!peerStarted && roomReady) {
+const attemptPeerStart = (connection) => {
+  log(
+    'Attempting peer start',
+    connection.peerStarted,
+    connection.roomReady,
+  );
+  if (!connection.peerStarted && connection.roomReady) {
     log('Creating peer connection');
     // log('initiator', initiator);
     // console.log('YES creating from attempt peer start');
-    createPeerConnection(initiator);
+    createPeerConnection(connection);
   } else {
     // console.log('NOT creating from attempt peer start');
     log('Not creating peer connection');
@@ -219,9 +299,15 @@ const attemptPeerStart = () => {
 };
 
 const initPeerClient = () => {
-  emitSocketMessage('initiate peer');
-  if (initiator) {
-    attemptPeerStart();
+  log('running init Peer Client. # of ' + connections.length);
+  initPeerRequest = true;
+
+  for (let i = 0; i < connections.length; i++) {
+    socket.emit('initiate peer', connections[i].room);
+    // socket.to(connections[i].room).emit('initiate peer');
+    if (connections[i].initiator) {
+      attemptPeerStart(connections[i]);
+    }
   }
 };
 
