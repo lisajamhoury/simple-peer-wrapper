@@ -36,10 +36,10 @@ function setup() {
 
   // Start socket client automatically on load
   // by default it connects to http://localhost:80
-  // WebRTCPeerClient.initSocketClient();
+  WebRTCPeerClient.initSocketClient();
 
   // to connect to server over public internet pass the ngrok address
-  WebRTCPeerClient.initSocketClient('https://65e0fc13a1c5.ngrok.io');
+  // WebRTCPeerClient.initSocketClient('https://65e0fc13a1c5.ngrok.io');
 
   // start the peer client
   WebRTCPeerClient.initPeerClient();
@@ -83,7 +83,7 @@ function draw() {
       let newUser = {
         userId: newData.userId,
         position: newData.data,
-        color: random(255),
+        color: random(100, 255),
       };
       otherUsers.push(newUser);
     }

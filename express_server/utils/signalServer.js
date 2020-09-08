@@ -3,25 +3,22 @@ const DEBUG = false;
 let rooms = [];
 let roomCounter = 0;
 
-const log = (message) => {
-  if (!DEBUG) {
-    return;
-  }
-  console.log(message);
-};
+if (!DEBUG) {
+  console.log = function () {};
+}
 
 const handleMessage = (message, socket) => {
-  log('Client said: ', message);
+  console.log('Client said: ', message);
   // for a real app, would be room-only (not broadcast)
   socket.broadcast.emit('message', message);
 };
 
 const handleInitiatePeer = (room, socket) => {
-  log('Server initiating peer in room ' + room);
+  console.log('Server initiating peer in room ' + room);
   socket.to(room).emit('initiate peer', room);
 };
 const handleSendSignal = (message, socket) => {
-  log('Handling send signal to room ' + message.room);
+  console.log('Handling send signal to room ' + message.room);
   socket.to(message.room).emit('sending signal', message);
 };
 
@@ -36,7 +33,7 @@ const handleCreateOrJoin = (unusedRoom, socket, ioServer) => {
     socket.join(room);
     socket.emit('created', room, socket.id);
 
-    log('Client ID ' + socket.id + ' created room ' + room);
+    console.log('Client ID ' + socket.id + ' created room ' + room);
   } else if (numClients === 2) {
     const room = rooms[0];
     ioServer.sockets.in(room).emit('join', room);
@@ -44,19 +41,23 @@ const handleCreateOrJoin = (unusedRoom, socket, ioServer) => {
     socket.emit('joined', room, socket.id);
     ioServer.sockets.in(room).emit('ready'); // not being used anywhere
 
-    log('Client ID ' + socket.id + ' joined room ' + room);
+    console.log('Client ID ' + socket.id + ' joined room ' + room);
   } else if (numClients > 2) {
     for (let i = 0; i < numClients; i++) {
       if (socket.id !== clientIds[i]) {
         // create a room and join it
         const room = createRoom();
         socket.join(room);
-        log('Client ID ' + socket.id + ' created room ' + room);
+        console.log(
+          'Client ID ' + socket.id + ' created room ' + room,
+        );
         socket.emit('created', room, socket.id);
         socket.emit('join', room);
 
         //
-        log('Client ID ' + clientIds[i] + ' joined room ' + room);
+        console.log(
+          'Client ID ' + clientIds[i] + ' joined room ' + room,
+        );
 
         // ioServer.sockets.in(room).emit('join', room);
         ioServer.sockets.sockets[clientIds[i]].join(room);
@@ -94,11 +95,11 @@ const handleIpAddress = (socket) => {
 };
 
 const handleHangup = () => {
-  log('received hangup');
+  console.log('received hangup');
 };
 
 const handleDisconnect = (reason) => {
-  log('disconnecting bc ' + reason);
+  console.log('disconnecting bc ' + reason);
 };
 
 const initSocketServer = function (ioServer) {

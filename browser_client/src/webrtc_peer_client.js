@@ -13,50 +13,47 @@ let initPeerRequest = false;
 
 const DEBUG = true;
 
-const log = function (message) {
-  if (!DEBUG) {
-    return;
-  }
-  console.log(message);
-};
+if (!DEBUG) {
+  console.log = function () {};
+}
 
 /////////////////// Client Signal Server Using Socket IO ///////////////////
 
 // starts socket client communication with signal server automatically
 const startSocketCommunication = () => {
   socket.emit('create or join');
-  log('Attempted to create or join room');
+  console.log('Attempted to create or join room');
 };
 
 const handleCreated = (room) => {
-  log('Created room ' + room);
+  console.log('Created room ' + room);
 };
 
 // room only holds two clients, can be changed in signal_socket.js
 const handleFullRoom = (room) => {
-  log('Room ' + room + ' is full');
+  console.log('Room ' + room + ' is full');
 };
 
 // called by initiator client only
 const handleJoinRoom = (room) => {
-  log('Another peer made a request to join room ' + room);
-  log('This peer is the initiator of room ' + room + '!');
+  console.log('Another peer made a request to join room ' + room);
+  console.log('This peer is the initiator of room ' + room + '!');
 
   logConnection(room, true, true, false);
   if (initPeerRequest) {
-    log('initing peer from handle join');
+    console.log('initing peer from handle join');
     initPeerClient();
   }
 };
 
 // called by non-initiator client
 const handleJoinedRoom = (room) => {
-  log('joined: ' + room);
+  console.log('joined: ' + room);
   roomReady = true;
 
   logConnection(room, false, true, false);
   if (initPeerRequest) {
-    log('initing peer from handle joined');
+    console.log('initing peer from handle joined');
     initPeerClient();
   }
 };
@@ -67,7 +64,7 @@ const logConnection = (
   _roomReady,
   _peerStarted,
 ) => {
-  log('logging connection');
+  console.log('logging connection');
   const newConnection = {
     room: _room, // socket.io server room
     initiator: _initiator, // client initiates the communication
@@ -89,9 +86,8 @@ const handleInitPeer = (room) => {
 };
 
 const handleSendSignal = (message) => {
-  log('receiving simple signal data');
+  console.log('receiving simple signal data');
   const connection = findConnection(message.room);
-  log('found the connection, ' + connection.room);
 
   if (!connection.peerStarted) {
     console.log('Creating peer from messages!');
@@ -112,9 +108,9 @@ const findConnection = (room) => {
   }
 
   if (connection === null) {
-    log('UT OH THAT CONNECTION DOESNT EXIST');
+    console.log('UT OH THAT CONNECTION DOESNT EXIST');
   } else {
-    log('found the connection for room ' + room);
+    console.log('found the connection for room: ' + room);
   }
 
   return connection;
@@ -122,12 +118,12 @@ const findConnection = (room) => {
 
 // This client receives a message
 const handleMessage = (message) => {
-  log('MESSAGE ' + message);
+  console.log('MESSAGE ' + message);
 
   if (message.type) {
-    log('received msg typ ' + message.type);
+    console.log('received msg typ ' + message.type);
   } else {
-    log('Client received message: ' + message);
+    console.log('Client received message: ' + message);
   }
 
   // TO DO HANDLE BYE
@@ -142,7 +138,7 @@ const initSocketClient = function (serverUrl) {
     socketServerUrl = serverUrl;
   }
 
-  log('connecting socket to ' + socketServerUrl);
+  console.log('connecting socket to ' + socketServerUrl);
   socket = io.connect(socketServerUrl);
 
   socket.on('created', (room) => handleCreated(room));
@@ -158,14 +154,14 @@ const initSocketClient = function (serverUrl) {
 };
 
 const emitSocketMessage = (message) => {
-  log('Client sending message: ', message);
+  console.log('Client sending message: ', message);
   socket.emit('message', message);
 };
 
 /////////////////// Peer Connection Via Simple Peer  ///////////////////
 
 const sendSignal = (data, connection) => {
-  log('sending signal');
+  console.log('sending signal');
 
   const message = {
     room: connection.room,
@@ -176,7 +172,7 @@ const sendSignal = (data, connection) => {
 };
 
 const handleConnection = (data) => {
-  log('SIMPLE PEER IS CONNECTED', data);
+  console.log('SIMPLE PEER IS CONNECTED', data);
 };
 
 const handleStream = (stream) => {
@@ -184,7 +180,7 @@ const handleStream = (stream) => {
 };
 
 const handleError = (err) => {
-  log(err);
+  console.log(err);
 };
 
 const handleData = (data) => {
@@ -209,7 +205,7 @@ const terminateSession = () => {
 };
 
 const handleClose = () => {
-  log('GOT CLOSE');
+  console.log('GOT CLOSE');
   // closePeerConnection();
   // emitSocketMessage('bye');
 };
@@ -227,7 +223,7 @@ const closePeerConnection = () => {
 };
 
 function createPeerConnection(connection) {
-  log('creating simple peer');
+  console.log('creating simple peer');
 
   const peer = new Peer({
     initiator: connection.initiator,
@@ -261,6 +257,7 @@ const sendData = (data) => {
 
   for (let i = 0; i < connections.length; i++) {
     const peer = connections[i].peer;
+    // console.log('Peer: ? ' + peer);
     if (peer.connected) {
       peer.write(msg);
     }
@@ -282,24 +279,24 @@ window.onbeforeunload = () => {
 /////////////////// getUserMedia starts video and starts Simple Peer on Connection  ///////////////////
 
 const attemptPeerStart = (connection) => {
-  log(
+  console.log(
     'Attempting peer start',
     connection.peerStarted,
     connection.roomReady,
   );
   if (!connection.peerStarted && connection.roomReady) {
-    log('Creating peer connection');
+    console.log('Creating peer connection');
     // log('initiator', initiator);
     // console.log('YES creating from attempt peer start');
     createPeerConnection(connection);
   } else {
     // console.log('NOT creating from attempt peer start');
-    log('Not creating peer connection');
+    console.log('Not creating peer connection');
   }
 };
 
 const initPeerClient = () => {
-  log('running init Peer Client. # of ' + connections.length);
+  console.log('running init Peer Client. # of ' + connections.length);
   initPeerRequest = true;
 
   for (let i = 0; i < connections.length; i++) {

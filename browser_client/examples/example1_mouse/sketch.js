@@ -44,7 +44,13 @@ function setup() {
   WebRTCPeerClient.initPeerClient();
 }
 
-function update() {
+function draw() {
+  // only proceed if the peer is started
+  if (!WebRTCPeerClient.isPeerStarted()) {
+    return;
+  }
+
+  //// UPDATE ////
   // get and send my mouse position over peer
   myMousePosition = { x: mouseX, y: mouseY };
   WebRTCPeerClient.sendData(myMousePosition);
@@ -58,10 +64,17 @@ function update() {
     partnerMousePosition.x = width - myMousePosition.x;
     partnerMousePosition.y = myMousePosition.y;
   } else {
-    partnerMousePosition = WebRTCPeerClient.getData();
-  }
+    // get data
+    const newData = WebRTCPeerClient.getData();
 
-  if (partnerMousePosition === null) return;
+    // check if there's data in the data;
+    if (newData === null) {
+      return;
+    } else {
+      // get the mouse data
+      partnerMousePosition = WebRTCPeerClient.getData().data;
+    }
+  }
 
   switch (state) {
     case 1:
@@ -77,15 +90,8 @@ function update() {
       grow();
       break;
   }
-}
 
-function draw() {
-  // only proceed if the peer is started
-  if (!WebRTCPeerClient.isPeerStarted()) {
-    return;
-  }
-
-  update();
+  //////// END UPDATE
 
   background(255, 50);
   noStroke();
@@ -133,10 +139,6 @@ function beat() {
 
 function flash() {
   if (touching(myMousePosition, partnerMousePosition)) {
-    // colorMode(HSB, 255);
-    // background(random(255), 255, 255);
-    // colorMode(RGB, 255);
-
     const myRand = random(2);
 
     if (myRand > 1) {
