@@ -12,13 +12,13 @@ To clone and run this repository you'll need [Git](https://git-scm.com) and [Nod
 
 ```bash
 # Clone this repository
-git clone https://github.com/lisajamhoury/Browser-to-Browser-Simple-Peer-Express-Example
+git clone https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
 # If on Windows you must allow for symlinks as follows
-git clone -c core.symlinks=true https://github.com/lisajamhoury/Browser-to-Browser-Simple-Peer-Express-Example
+git clone -c core.symlinks=true https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
 
 # Install and Run the Server and First Client
 # Go into the Express application folder
-cd Browser-to-Browser-Simple-Peer-Express-Example/express_server
+cd WebRTC-Simple-Peer-Examples/express_server
 # Install dependencies
 npm install
 # Run the Express app — this will start the signaling server and first client
@@ -27,7 +27,7 @@ npm run watch
 
 # Install and Run the Second Client
 # In a new command line window, go into the client folder
-cd Browser-to-Browser-Simple-Peer-Express-Example/browser_client
+cd WebRTC-Simple-Peer-Examples/browser_client
 # Install dependencies
 npm install
 # To make changes to client, run watchify in separate command line window
