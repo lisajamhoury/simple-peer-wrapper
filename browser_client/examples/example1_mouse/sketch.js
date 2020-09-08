@@ -14,7 +14,7 @@ let myMousePosition = {};
 let state = 1;
 
 // use for developing without partner
-let mirror = false;
+let mirror = true;
 
 // to lerp beat
 let step = 0.1;
@@ -92,12 +92,12 @@ function draw() {
 
   // draw my mouse
   fill(colors.x);
-  circle(myMousePosition.x, myMousePosition.y, size);
+  ellipse(myMousePosition.x, myMousePosition.y, size);
 
   // make sure we have a partner mouse before drawing
   if (partnerMousePosition !== null) {
     fill(colors.y);
-    circle(partnerMousePosition.x, partnerMousePosition.y, size);
+    ellipse(partnerMousePosition.x, partnerMousePosition.y, size);
   }
 }
 
