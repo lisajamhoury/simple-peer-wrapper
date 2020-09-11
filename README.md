@@ -1,8 +1,8 @@
 # Browser to Browser Connection with Simple Peer, Socket.io and Express
 
-This combines an Express Server with [Realtime Communication with WebRTC](https://codelabs.developers.google.com/codelabs/webrtc-web/#0) Socket.io Signal Server from Codelabs, and [Simple Peer](https://github.com/feross/simple-peer).
+This combines an Express Server with Socket.io Signal Server, and [Simple Peer](https://github.com/feross/simple-peer).
 
-It runs a Socket.io signal server, then a peer connection over webRTC using Simple Peer between two browser windows. Express serves the signal server. This currently runs over localhost. The express server is on port 3000. The socket server is on port 80.
+It runs a Socket.io signal server, then a peer connection over webRTC using Simple-Peer between two browser windows. Express serves the signal server. This currently runs over localhost. The express server is on port 3000. The socket server is on port 80.
 
 ## To Use
 
