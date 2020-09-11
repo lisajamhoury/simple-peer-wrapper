@@ -6,8 +6,6 @@ It runs a Socket.io signal server, then a peer connection over webRTC using Simp
 
 ## To Use
 
-For Mac OS use master branch. Windows 10 does not allow for two apps to simultaniously use the webcam, so the master branch getUserMedia example will not work.
-
 To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
 
 ```bash
