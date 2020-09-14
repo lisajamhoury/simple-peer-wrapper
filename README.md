@@ -55,12 +55,12 @@ For Windows 10 users: For step 2 and 3 use `ngrok` rather than `./ngrok`, so the
 3. Find your ngrok address and add it to your sketch code. For example:
 
 ```
-# in file Browser-to-Browser-Simple-Peer-Express-Example/browser_client/examples/example1_mouse/sketch.js
+// in file Browser-to-Browser-Simple-Peer-Express-Example/browser_client/examples/example1_mouse/sketch.js
 
-# Init signal server over localhost port 80
-WebRTCPeerClient.initSocketClient();
+// Delete this line, which connects your peer on localhost port 80
+//WebRTCPeerClient.initSocketClient();
 
-# Init signal server on public internet with ngrok
+// Init signal server on public internet with ngrok
 WebRTCPeerClient.initSocketClient('https://f54b8ef193dd.ngrok.io');
 ```
 
