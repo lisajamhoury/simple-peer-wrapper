@@ -170,7 +170,7 @@ const sendSignal = (data, connection) => {
 };
 
 const handleConnection = (data) => {
-  console.log('SIMPLE PEER IS CONNECTED', data);
+  console.log('SIMPLE PEER IS CONNECTED');
 };
 
 const handleStream = (stream) => {
