@@ -252,12 +252,13 @@ const isPeerStarted = () => {
 
 const sendData = (data) => {
   let msg = JSON.stringify({ data: data, userId: socket.id });
-
   for (let i = 0; i < connections.length; i++) {
-    const peer = connections[i].peer;
-    // debug && console.log('Peer: ? ' + peer);
-    if (peer.connected) {
-      peer.write(msg);
+    const peer = connections[i];
+    if (peer.peerStarted) {
+      const peerConn = peer.peer;
+      if (peer.connected) {
+        peer.write(msg);
+      }
     }
   }
 };
