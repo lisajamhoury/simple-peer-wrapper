@@ -6,7 +6,9 @@ It runs a Socket.io signal server, then a peer connection over webRTC using Simp
 
 ## To Use
 
-To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
+To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. If you're using Windows 10, make sure you've enabled [Developer Mode](https://mywindowshub.com/how-to-enable-developer-mode-in-your-windows-10-computer/). 
+
+From your command line:
 
 ```bash
 # Clone this repository
