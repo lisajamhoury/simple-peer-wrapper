@@ -14620,8 +14620,8 @@ const sendData = (data) => {
     const peer = connections[i];
     if (peer.peerStarted) {
       const peerConn = peer.peer;
-      if (peer.connected) {
-        peer.write(msg);
+      if (peerConn.connected) {
+        peerConn.write(msg);
       }
     }
   }
