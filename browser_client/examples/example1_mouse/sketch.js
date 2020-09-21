@@ -1,4 +1,6 @@
-// The Body Everywhere and Here Class 2: Example 1 — Mouse over webRTC
+// WebRTC Simple Peer Example — Mouse over webRTC
+// https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
+// Created for The Body Everywhere and Here
 // https://github.com/lisajamhoury/The-Body-Everywhere-And-Here/
 
 // This example allows for two users to draw on the same p5 canvas
@@ -25,7 +27,7 @@ let state = 1;
 // Use for developing without partner
 // This will mirror one user's mouse
 // and will ingnore the mouse over peer connection
-let mirror = true;
+const mirror = true;
 
 // Globals for lerping in heartbeat animation
 let step = 0.1;
@@ -67,6 +69,9 @@ function setup() {
   WebRTCPeerClient.initPeerClient();
 }
 
+// Draw() is a p5 function
+// See this example if this is new to you
+// https://p5js.org/examples/structure-setup-and-draw.html
 function draw() {
   // Only proceed if the peer connection is started
   if (!WebRTCPeerClient.isPeerStarted()) {
