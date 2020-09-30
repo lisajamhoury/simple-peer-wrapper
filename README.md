@@ -11,7 +11,7 @@ To clone and run this repository you'll need [Git](https://git-scm.com) and [Nod
 From your command line:
 
 ```bash
-# Clone this repository
+# Clone this repository (Mac only, see next line for Windows instructions)
 git clone https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
 # If on Windows you must allow for symlinks as follows
 git clone -c core.symlinks=true https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
@@ -44,6 +44,36 @@ npm run watch
 ```
 
 Open http://localhost:3000 in your browser to see first client. Open http://localhost:8000/examples in your browser to start the second client. Open the developer console (option+command+I) to see communication between Server and clients.
+
+## API 
+
+### .initSocketClient(serverUrl)  
+
+Makes a connection from the client to the socket server. Pass the url of your socket server. By default it will be at http://localhost:80. To make available to the public internet, run with ngrok (instructions below). Must be used before .initPeerClient().
+
+### .initPeerClient()
+
+Makes a request for a peer connection to each of the available peers on the network.
+
+### .isInitiator()
+
+The initiator is the peer who initiated the peer connection. Returns true or false. 
+
+### .sendData(data)
+
+Used to send data to all other peers on the network. Data should be sent in JSON format.
+
+### .getData()
+
+Retrieves data from the peer. Provides data from and id of the sending peer. ```{ data: data, userId: socket.id }```
+  
+### .isPeerStarted()
+
+Logs if the peer connection is started or not. Returns true of false. 
+
+### .setDebug(debug)
+
+Turns server and peer logs on and off. Takes a boolean: true or false. 
 
 ## To Run Signal Server Online With NGROK
 
