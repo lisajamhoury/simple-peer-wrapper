@@ -38,6 +38,8 @@ function draw() {
 
   getOtherPoses();
 
+  if (typeof myPose.pose === 'undefined') return;
+
   if (otherPoses.length < 1) return;
 
   background(255, 50);
@@ -52,7 +54,7 @@ function draw() {
   if (otherPoses.length > 0) {
     for (let i = 0; i < otherPoses.length; i++) {
       const newColor = color(otherPoses[i].color, 255, 255);
-      drawKeypoints(otherPoses[i].pose, newColor, 10 * i);
+      drawKeypoints(otherPoses[i].pose, newColor, 50 * i);
     }
   }
 }
