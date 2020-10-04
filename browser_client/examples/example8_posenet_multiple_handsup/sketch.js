@@ -5,9 +5,7 @@
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
-// peer variables
-let startPeer;
-
+// variable to hold all poses
 let allPoses = [];
 
 // Confidence threshold for posenet keypoints
@@ -38,7 +36,6 @@ function draw() {
 
   // make sure we have our pose before going on
   if (allPoses.length === 0) {
-    console.log('waiting for my pose');
     return;
   }
 
@@ -46,7 +43,6 @@ function draw() {
 
   // make sure we have two poses before drawing
   if (allPoses.length < 2) {
-    console.log('waiting for other poses');
     return;
   }
 
@@ -57,85 +53,11 @@ function draw() {
   drawAllPoses();
 }
 
-function drawAllPoses() {
-  const numPlayers = allPoses.length;
-
-  const pWidth = width / numPlayers;
-
-  let handsAtTop = true;
-
-  if (allPoses.length > 0) {
-    for (let i = 0; i < allPoses.length; i++) {
-      const newColor = color(allPoses[i].color, 255, 255);
-
-      if (handsAtTop) {
-        handsAtTop = checkHands(allPoses[i].pose);
-      }
-
-      fill(newColor);
-      rect(i * pWidth, 0, pWidth, height);
-      const currentPose = allPoses[i].pose;
-      drawKeypoints(currentPose, 'white', i, numPlayers, pWidth);
-    }
-  }
-
-  // console.log('attop' + handsAtTop);
-  if (handsAtTop) {
-    fill(45, 255, 255);
-    rect(0, 0, width, height);
-    fill(255);
-
-    textSize(70);
-    textAlign(CENTER);
-    text('Wow! Great Teamwork!', width / 2, height / 2);
-  }
-}
-
-function checkHands(pose) {
-  const lHandY = pose.pose.leftWrist.y;
-  const rHandY = pose.pose.rightWrist.y;
-
-  let atTop = true;
-
-  if (lHandY > 100 || rHandY > 100) {
-    atTop = false;
-  }
-
-  return atTop;
-}
-
-// A function to draw ellipses over the detected keypoints
-// Include an offset if testing by yourself
-// And you want to offset one of the skeletons
-function drawKeypoints(pose, clr, index, numPlayers, pWidth) {
-  // rect(i * playerW, 0, playerW, height);
-
-  const keypoints = pose.pose.keypoints;
-  // Loop through all keypoints
-  for (let j = 0; j < keypoints.length; j++) {
-    // A keypoint is an object describing a body part (like rightArm or leftShoulder)
-    const keypoint = keypoints[j];
-    // Only draw an ellipse is the pose probability is bigger than 0.2
-    if (keypoint.score > scoreThreshold) {
-      const newX = keypoint.position.x / numPlayers + pWidth * index;
-      const newY = keypoint.position.y / numPlayers;
-
-      fill(clr);
-      noStroke();
-      ellipse(
-        newX, // Offset useful if testing on your own
-        newY,
-        size,
-        size,
-      );
-    }
-  }
-}
-
 function initPosenet() {
   // Create webcam capture for posenet
   video = createCapture(VIDEO);
   video.size(width, height);
+  video.hide();
 
   // Options for posenet
   // See https://ml5js.org/reference/api-PoseNet/
@@ -170,19 +92,16 @@ function initPosenet() {
   // Everytime we get a pose from posenet, call "getPose"
   // and pass in the results
   poseNet.on('pose', (results) => getPose(results));
-
-  // Hide the webcam element, and just show the canvas
-  video.hide();
 }
 
 function initPeer() {
   console.log('starting peer');
   // Start socket client automatically on load
   // by default it connects to http://localhost:80
-  // WebRTCPeerClient.initSocketClient();
+  WebRTCPeerClient.initSocketClient();
 
   // to connect to server over public internet pass the ngrok address
-  WebRTCPeerClient.initSocketClient('https://7842668a81f8.ngrok.io');
+  // WebRTCPeerClient.initSocketClient('https://7842668a81f8.ngrok.io');
 
   // start the peer client
   WebRTCPeerClient.initPeerClient();
@@ -195,17 +114,18 @@ function modelReady() {
 
 // Function to get and send pose from posenet
 function getPose(poses) {
-  // We're using single detection so we'll only have one pose
-  // which will be at [0] in the array
-
+  // check the pose array
+  // if my pose isn't there yet
+  // make me the first user in the array
   if (allPoses.length === 0) {
     let newUser = {
-      userId: 1, // how to get my id?
-      pose: poses[0],
-      color: random(0, 255),
+      userId: 1, // give myself an arbitrary id
+      pose: poses[0], // get first pose from posenet array
+      color: random(0, 255), // give me a random color
     };
-    allPoses.push(newUser);
+    allPoses.push(newUser); // add to array
   } else {
+    // otherwise, update my position
     allPoses[0].pose = poses[0];
   }
 
@@ -216,26 +136,124 @@ function getPose(poses) {
 }
 
 function getOtherPoses() {
+  // get new data from peer
   const newData = WebRTCPeerClient.getData();
+
+  // make sure there's data
   if (newData === null) {
     return;
   }
 
   let foundMatch = false;
 
+  // see if the data is from a user that already exists
   for (let i = 0; i < allPoses.length; i++) {
+    // if the user exists
     if (newData.userId === allPoses[i].userId) {
+      // update their pose
       allPoses[i].pose = newData.data;
+      // we found a match!
       foundMatch = true;
     }
   }
 
+  // if the user doesn't exist
   if (!foundMatch) {
+    // create a new user
     let newUser = {
       userId: newData.userId,
       pose: newData.data,
       color: random(0, 255),
     };
+    // add them to the array
     allPoses.push(newUser);
+  }
+}
+
+function drawAllPoses() {
+  // how many poses do we have
+  const numPlayers = allPoses.length;
+
+  // how much space do they each get
+  const pWidth = width / numPlayers;
+
+  // check if everyone has their hands up!
+  let handsAtTop = true;
+
+  // double check we have poses
+  if (allPoses.length > 0) {
+    // go through all the poses
+    for (let i = 0; i < allPoses.length; i++) {
+      // ge the color
+      const newColor = color(allPoses[i].color, 255, 255);
+
+      // check that the hands are up
+      // if anyone has their hands down, this becomes false
+      if (handsAtTop) {
+        handsAtTop = checkHands(allPoses[i].pose);
+      }
+
+      // use the user's color
+      fill(newColor);
+      // draw a rectanble for the pose
+      rect(i * pWidth, 0, pWidth, height);
+
+      // get the user's pose
+      const currentPose = allPoses[i].pose;
+
+      // draw the pose
+      drawKeypoints(currentPose, 'white', i, numPlayers, pWidth);
+    }
+  }
+
+  // if everyone has their hands up
+  // tell them they did a good job!
+  if (handsAtTop) {
+    fill(45, 255, 255);
+    rect(0, 0, width, height);
+    fill(255);
+
+    textSize(70);
+    textAlign(CENTER);
+    text('Wow! Great Teamwork!', width / 2, height / 2);
+  }
+}
+
+function checkHands(pose) {
+  // get left and right hands
+  const lHandY = pose.pose.leftWrist.y;
+  const rHandY = pose.pose.rightWrist.y;
+
+  let atTop = true;
+
+  // if either hand is not up, then hands are down
+  if (lHandY > 100 || rHandY > 100) {
+    atTop = false;
+  }
+
+  // return true or false
+  return atTop;
+}
+
+// A function to draw ellipses over the detected keypoints
+// Include an offset if testing by yourself
+// And you want to offset one of the skeletons
+function drawKeypoints(pose, clr, index, numPlayers, pWidth) {
+  // rect(i * playerW, 0, playerW, height);
+
+  const keypoints = pose.pose.keypoints;
+  // Loop through all keypoints
+  for (let j = 0; j < keypoints.length; j++) {
+    // A keypoint is an object describing a body part (like rightArm or leftShoulder)
+    const keypoint = keypoints[j];
+    // Only draw an ellipse is the pose probability is bigger than 0.2
+    if (keypoint.score > scoreThreshold) {
+      const newX = keypoint.position.x / numPlayers + pWidth * index;
+      const newY = keypoint.position.y / numPlayers;
+
+      fill(clr);
+      noStroke();
+      ellipse(newX, newY, size, size);
+    }
   }
 }

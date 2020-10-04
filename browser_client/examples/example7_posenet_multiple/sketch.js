@@ -5,9 +5,6 @@
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
-// peer variables
-let startPeer;
-
 let myPose = {};
 let otherPoses = [];
 
@@ -23,7 +20,7 @@ const size = 10;
 
 function setup() {
   createCanvas(500, 500);
-  frameRate(60);
+  frameRate(60); // try at 30 if latency
   colorMode(HSB, 255);
 
   initPosenet();
@@ -36,26 +33,26 @@ function draw() {
     return;
   }
 
+  // get other poses from peer
   getOtherPoses();
 
+  // make sure my pose is loaded
   if (typeof myPose.pose === 'undefined') return;
 
+  // make sure other poses are loaded
   if (otherPoses.length < 1) return;
 
   background(255, 50);
   noStroke();
 
-  // draw my mouse
+  // draw my pose
   const myColor = color(25, 255, 255);
-
   drawKeypoints(myPose, myColor, 0);
 
-  // make sure we have a partner mouse before drawing
-  if (otherPoses.length > 0) {
-    for (let i = 0; i < otherPoses.length; i++) {
-      const newColor = color(otherPoses[i].color, 255, 255);
-      drawKeypoints(otherPoses[i].pose, newColor, 50 * i);
-    }
+  // draw other poses
+  for (let i = 0; i < otherPoses.length; i++) {
+    const newColor = color(otherPoses[i].color, 255, 255);
+    drawKeypoints(otherPoses[i].pose, newColor, 50 * i);
   }
 }
 
@@ -132,26 +129,36 @@ function getPose(poses) {
 }
 
 function getOtherPoses() {
+  // get new data from peer
   const newData = WebRTCPeerClient.getData();
+
+  // make sure there's data
   if (newData === null) {
     return;
   }
 
   let foundMatch = false;
 
+  // see if the data is from a user that already exists
   for (let i = 0; i < otherPoses.length; i++) {
+    // if the user exists
     if (newData.userId === otherPoses[i].userId) {
+      // update their pose
       otherPoses[i].pose = newData.data;
+      // we found a match!
       foundMatch = true;
     }
   }
 
+  // if the user doesn't exist
   if (!foundMatch) {
+    // create a new user
     let newUser = {
       userId: newData.userId,
       pose: newData.data,
       color: random(50, 150),
     };
+    // add them to the array
     otherPoses.push(newUser);
   }
 }
