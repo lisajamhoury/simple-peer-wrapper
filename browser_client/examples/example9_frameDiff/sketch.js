@@ -54,7 +54,10 @@ function setup() {
 
   // To connect to server over public internet pass the ngrok address
   // See https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples#to-run-signal-server-online-with-ngrok
-  // WebRTCPeerClient.initSocketClient('https://xxxxxxxxxxxx.ngrok.io');
+  // const options = {
+  //   serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
+  // };
+  // WebRTCPeerClient.initSocketClient(options);
 
   // Start the peer client
   WebRTCPeerClient.initPeerClient();

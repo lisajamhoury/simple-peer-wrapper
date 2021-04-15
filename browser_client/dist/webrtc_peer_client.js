@@ -14291,6 +14291,7 @@ module.exports = {
   isInitiator: WebRTCPeerClient.isInitiator,
   sendData: WebRTCPeerClient.sendData,
   getData: WebRTCPeerClient.getData,
+  getStream: WebRTCPeerClient.getStream,
   isPeerStarted: WebRTCPeerClient.isPeerStarted,
   setDebug: WebRTCPeerClient.setDebug,
 };
@@ -14366,6 +14367,8 @@ const io = require('socket.io-client');
 let Peer = require('simple-peer');
 
 let socket;
+let localStream;
+let incomingStream;
 
 const turnRequest = require('./turnRequest');
 turnRequest();
@@ -14493,15 +14496,16 @@ const handleMessage = (message) => {
   //   handleRemoteHangup();
 };
 
-const initSocketClient = function (serverUrl) {
-  let socketServerUrl = 'http://localhost:80';
-
-  if (typeof serverUrl !== 'undefined') {
-    socketServerUrl = serverUrl;
+const initSocketClient = function ({
+  stream,
+  serverUrl = 'http://localhost:8081',
+} = {}) {
+  if (typeof stream !== 'undefined') {
+    localStream = stream; // put stream in global
   }
 
-  debug && console.log('connecting socket to ' + socketServerUrl);
-  socket = io.connect(socketServerUrl);
+  debug && console.log('connecting socket to ' + serverUrl);
+  socket = io.connect(serverUrl);
 
   socket.on('created', (room) => handleCreated(room));
   socket.on('full', (room) => handleFullRoom(room));
@@ -14538,7 +14542,7 @@ const handleConnection = (data) => {
 };
 
 const handleStream = (stream) => {
-  // remoteVideo.srcObject = stream;
+  incomingStream = stream;
 };
 
 const handleError = (err) => {
@@ -14586,10 +14590,18 @@ const closePeerConnection = () => {
 
 function createPeerConnection(connection) {
   debug && console.log('creating simple peer');
+  let peer;
 
-  const peer = new Peer({
-    initiator: connection.initiator,
-  });
+  if (typeof localStream === 'undefined') {
+    peer = new Peer({
+      initiator: connection.initiator,
+    });
+  } else {
+    peer = new Peer({
+      initiator: connection.initiator,
+      stream: localStream,
+    });
+  }
 
   // If initiator,peer.on'signal' will fire right away, if not it waits for signal
   // https://github.com/feross/simple-peer#peeronsignal-data--
@@ -14635,6 +14647,14 @@ const getData = () => {
   }
 };
 
+const getStream = () => {
+  if (incomingStream !== null) {
+    return incomingStream;
+  } else {
+    return null;
+  }
+};
+
 window.onbeforeunload = () => {
   terminateSession();
 };
@@ -14646,13 +14666,11 @@ const attemptPeerStart = (connection) => {
       connection.peerStarted,
       connection.roomReady,
     );
+
   if (!connection.peerStarted && connection.roomReady) {
     debug && console.log('Creating peer connection');
-    // log('initiator', initiator);
-    // debug && console.log('YES creating from attempt peer start');
     createPeerConnection(connection);
   } else {
-    // debug && console.log('NOT creating from attempt peer start');
     debug && console.log('Not creating peer connection');
   }
 };
@@ -14666,7 +14684,6 @@ const initPeerClient = () => {
 
   for (let i = 0; i < connections.length; i++) {
     socket.emit('initiate peer', connections[i].room);
-    // socket.to(connections[i].room).emit('initiate peer');
     if (connections[i].initiator) {
       attemptPeerStart(connections[i]);
     }
@@ -14687,6 +14704,7 @@ module.exports = {
   isInitiator: isInitiator,
   sendData: sendData,
   getData: getData,
+  getStream: getStream,
   isPeerStarted: isPeerStarted,
   setDebug: setDebug,
 };

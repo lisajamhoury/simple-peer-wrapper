@@ -6,6 +6,7 @@ module.exports = {
   isInitiator: WebRTCPeerClient.isInitiator,
   sendData: WebRTCPeerClient.sendData,
   getData: WebRTCPeerClient.getData,
+  getStream: WebRTCPeerClient.getStream,
   isPeerStarted: WebRTCPeerClient.isPeerStarted,
   setDebug: WebRTCPeerClient.setDebug,
 };

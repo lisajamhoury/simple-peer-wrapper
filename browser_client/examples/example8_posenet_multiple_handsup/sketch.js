@@ -95,15 +95,18 @@ function initPosenet() {
 }
 
 function initPeer() {
-  console.log('starting peer');
   // Start socket client automatically on load
-  // by default it connects to http://localhost:80
+  // By default it connects to http://localhost:80
   WebRTCPeerClient.initSocketClient();
 
-  // to connect to server over public internet pass the ngrok address
-  // WebRTCPeerClient.initSocketClient('https://7842668a81f8.ngrok.io');
+  // To connect to server over public internet pass the ngrok address
+  // See https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples#to-run-signal-server-online-with-ngrok
+  // const options = {
+  //   serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
+  // };
+  // WebRTCPeerClient.initSocketClient(options);
 
-  // start the peer client
+  // Start the peer client
   WebRTCPeerClient.initPeerClient();
 }
 

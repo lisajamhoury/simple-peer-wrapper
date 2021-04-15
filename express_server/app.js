@@ -17,7 +17,7 @@ const ioServer = require('socket.io')(server);
 const initSignalServer = require('./utils/signalServer.js');
 initSignalServer(ioServer);
 
-server.listen(80);
+server.listen(8081);
 
 const liveReloadServer = livereload.createServer();
 liveReloadServer.watch(path.join(__dirname, 'public'));
