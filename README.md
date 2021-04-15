@@ -12,35 +12,35 @@ From your command line:
 
 ```bash
 # Clone this repository (Mac only, see next line for Windows instructions)
-git clone https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
+$ git clone https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
 # If on Windows you must allow for symlinks as follows
-git clone -c core.symlinks=true https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
+$ git clone -c core.symlinks=true https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
 
 # Install and Run the Server and First Client
 # Go into the Express application folder
-cd WebRTC-Simple-Peer-Examples/express_server
+$ cd WebRTC-Simple-Peer-Examples/express_server
 # Install dependencies
-npm install
+$ npm install
 # Run the Express app — this will start the signaling server and first client
 # It will watch and autorefresh on changes
-npm run watch
+$ npm run watch
 
 # Install and Run the Second Client
 # In a new command line window, go into the client folder
-cd WebRTC-Simple-Peer-Examples/browser_client
+$ cd WebRTC-Simple-Peer-Examples/browser_client
 # Install dependencies
-npm install
+$ npm install
 # Run a simple python server on your localhost
 # If python 2
-python -m SimpleHTTPServer 8000
+$ python -m SimpleHTTPServer 8000
 # If python 3
-python -m http.server 8000
+$ python -m http.server 8000
 
 # To make changes to the client module
 # In a third command line window, go into the client folder
-cd WebRTC-Simple-Peer-Examples/browser_client
+$ cd WebRTC-Simple-Peer-Examples/browser_client
 # Run watchify
-npm run watch
+$ npm run watch
 ```
 
 Open http://localhost:3000 in your browser to see first client. Open http://localhost:8000/examples in your browser to start the second client. Open the developer console (option+command+I) to see communication between Server and clients.
@@ -99,7 +99,7 @@ The signal server runs on localhost at port 80 (http://127.0.0.1:80) by default.
 
 ```bash
 
-cd folder_containing_ngrok
+$ cd folder_containing_ngrok
 $ ./ngrok http 8081
 
 ```
