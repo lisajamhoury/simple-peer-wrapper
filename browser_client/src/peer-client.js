@@ -139,6 +139,7 @@ class SimplePeerClientWrapper {
   }
 
   _handleStream(stream) {
+    console.log('handling stream');
     this.incomingStream = stream;
   }
 

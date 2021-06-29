@@ -14303,9 +14303,14 @@ class Signal {
     this.peerClient.sendData(data);
   }
 
-  // TODO: Use events instead!!!
+  // TODO: Use events instead!!! on.('data')
   getData() {
     return this.peerClient.getData();
+  }
+
+  // TODO: Use events instead!!! on.('stream')
+  getStream() {
+    return this.peerClient.getStream();
   }
 }
 
@@ -14453,6 +14458,7 @@ class SimplePeerClientWrapper {
   }
 
   _handleStream(stream) {
+    console.log('handling stream');
     this.incomingStream = stream;
   }
 
@@ -14525,7 +14531,7 @@ class SocketIOClientWrapper {
     );
 
     if (typeof stream !== 'undefined') {
-      this.peerClient.setlocalStream = stream;
+      this.peerClient.setlocalStream(stream);
     }
 
     this._initSocket();

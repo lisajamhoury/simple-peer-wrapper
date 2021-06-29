@@ -18,9 +18,14 @@ class Signal {
     this.peerClient.sendData(data);
   }
 
-  // TODO: Use events instead!!!
+  // TODO: Use events instead!!! on.('data')
   getData() {
     return this.peerClient.getData();
+  }
+
+  // TODO: Use events instead!!! on.('stream')
+  getStream() {
+    return this.peerClient.getStream();
   }
 }
 

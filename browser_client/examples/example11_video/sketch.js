@@ -21,6 +21,8 @@ let partnerStream = null;
 let currentPartnerId = null;
 let partnerStreamStarted = false;
 
+let signal;
+
 function setup() {
   createCanvas(640, 240);
 
@@ -36,18 +38,26 @@ function setup() {
   partnerVideo.hide();
 
   // set to true to turn on logging for the webrtc client
-  WebRTCPeerClient.setDebug(false);
+  // WebRTCPeerClient.setDebug(false);
 }
 
 function gotMedia(stream) {
   // start the webrtc connection
 
   // send my video stream
-  WebRTCPeerClient.initSocketClient({
-    serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
+  // WebRTCPeerClient.initSocketClient({
+  //   serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
+  //   stream: stream,
+  // });
+  // WebRTCPeerClient.initPeerClient();
+
+  const options = {
+    // serverUrl: 'https://da25d6a0023b.ngrok.io',
     stream: stream,
-  });
-  WebRTCPeerClient.initPeerClient();
+  };
+
+  signal = new WebRTCPeerClient(options);
+  signal.connect();
 }
 
 function draw() {
@@ -67,13 +77,20 @@ function draw() {
   }
 
   // Only proceed if the peer connection is started
-  if (!WebRTCPeerClient.isPeerStarted()) {
-    // console.log('Waiting for peer to start');
+  // console.log(typeof signal);
+
+  if (
+    typeof signal === 'undefined' ||
+    !signal.isConnectionStarted()
+  ) {
+    console.log('waiting for peer to start');
     return;
   }
 
   // get my partners stream
-  partnerStream = WebRTCPeerClient.getStream();
+  // MAKE THIS ON STREAM??
+  // partnerStream = WebRTCPeerClient.getStream();
+  partnerStream = signal.getStream();
 
   // if the partner stream exists and its id is new
   if (

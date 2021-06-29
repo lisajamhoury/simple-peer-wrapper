@@ -20,7 +20,7 @@ class SocketIOClientWrapper {
     );
 
     if (typeof stream !== 'undefined') {
-      this.peerClient.setlocalStream = stream;
+      this.peerClient.setlocalStream(stream);
     }
 
     this._initSocket();
