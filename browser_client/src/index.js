@@ -18,6 +18,10 @@ class Signal {
     this.peerClient.sendData(data);
   }
 
+  on(event, callback) {
+    this.peerClient.setEventCallback(event, callback);
+  }
+
   // TODO: Use events instead!!! on.('data')
   getData() {
     return this.peerClient.getData();

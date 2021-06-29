@@ -14303,6 +14303,10 @@ class Signal {
     this.peerClient.sendData(data);
   }
 
+  on(event, callback) {
+    this.peerClient.setEventCallback(event, callback);
+  }
+
   // TODO: Use events instead!!! on.('data')
   getData() {
     return this.peerClient.getData();
@@ -14328,6 +14332,7 @@ class SimplePeerClientWrapper {
     this.newData = null;
     this.debug = debug;
     this.connections = [];
+    this.onDataCallback;
   }
 
   setlocalStream(stream) {
@@ -14403,6 +14408,12 @@ class SimplePeerClientWrapper {
     return peerStarted;
   }
 
+  setEventCallback(event, callback) {
+    if (event === 'data') {
+      this.onDataCallback = callback;
+    }
+  }
+
   sendData(data) {
     let msg = JSON.stringify({ data: data, userId: this.socket.id });
     for (let i = 0; i < this.connections.length; i++) {
@@ -14469,7 +14480,8 @@ class SimplePeerClientWrapper {
   _handleData(data) {
     const decodedString = new TextDecoder('utf-8').decode(data);
     const decodedJSON = JSON.parse(decodedString);
-    this.newData = decodedJSON;
+    // this.newData = decodedJSON;
+    this.onDataCallback(decodedJSON);
   }
 
   _terminateSession() {
