@@ -1,12 +1,27 @@
-const WebRTCPeerClient = require('./webrtc_peer_client.js');
+const SocketIOClientWrapper = require('./socket-client.js');
 
-module.exports = {
-  initSocketClient: WebRTCPeerClient.initSocketClient,
-  initPeerClient: WebRTCPeerClient.initPeerClient,
-  isInitiator: WebRTCPeerClient.isInitiator,
-  sendData: WebRTCPeerClient.sendData,
-  getData: WebRTCPeerClient.getData,
-  getStream: WebRTCPeerClient.getStream,
-  isPeerStarted: WebRTCPeerClient.isPeerStarted,
-  setDebug: WebRTCPeerClient.setDebug,
-};
+class Signal {
+  constructor(options) {
+    this.socketClient = new SocketIOClientWrapper(options);
+    this.peerClient = this.socketClient.peerClient;
+  }
+
+  connect() {
+    this.peerClient.init();
+  }
+
+  isConnectionStarted() {
+    return this.peerClient.isPeerStarted();
+  }
+
+  send(data) {
+    this.peerClient.sendData(data);
+  }
+
+  // TODO: Use events instead!!!
+  getData() {
+    return this.peerClient.getData();
+  }
+}
+
+module.exports = Signal;
