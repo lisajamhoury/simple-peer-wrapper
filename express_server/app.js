@@ -13,9 +13,11 @@ const usersRouter = require('./routes/users');
 const app = express();
 
 const server = http.createServer(app);
-const ioServer = require('socket.io')(server);
-const initSignalServer = require('./utils/signalServer.js');
-initSignalServer(ioServer);
+const SimplePeerServer = require('./utils/signalServer.js');
+
+const spServer = new SimplePeerServer(server, true);
+
+// initSignalServer(server);
 
 server.listen(8081);
 

@@ -7,7 +7,7 @@
 
 let myMousePosition = {};
 let otherUsers = [];
-let signal;
+let spw;
 let newData;
 
 const size = 50;
@@ -19,9 +19,9 @@ function setup() {
 
   // Start socket client automatically on load
   // By default it connects to http://localhost:80
-  signal = new WebRTCPeerClient();
-  signal.connect();
-  signal.on('data', gotData);
+  spw = new SimplePeerWrapper();
+  spw.connect();
+  spw.on('data', gotData);
 }
 
 function gotData(data) {
@@ -30,13 +30,13 @@ function gotData(data) {
 
 function draw() {
   // only proceed if the peer is started
-  if (!signal.isConnectionStarted()) {
+  if (!spw.isConnectionStarted()) {
     return;
   }
 
   // get and send my mouse position over peer
   myMousePosition = { x: mouseX, y: mouseY };
-  signal.send(myMousePosition);
+  spw.send(myMousePosition);
 
   if (typeof newData === 'undefined') {
     console.log('returning ');
@@ -91,3 +91,8 @@ function draw() {
     );
   }
 }
+
+// Close simple-peer connections before exiting
+window.onbeforeunload = () => {
+  spw.close();
+};

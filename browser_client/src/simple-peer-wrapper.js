@@ -21,6 +21,10 @@ class SimplePeerWrapper {
   on(event, callback) {
     this.peerClient.setEventCallback(event, callback);
   }
+
+  close() {
+    this.peerClient.terminateSession();
+  }
 }
 
 module.exports = SimplePeerWrapper;

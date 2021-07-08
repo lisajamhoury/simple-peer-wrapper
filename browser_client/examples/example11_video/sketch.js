@@ -38,6 +38,7 @@ function setup() {
 function gotMedia(stream) {
   const options = {
     stream: stream,
+    debug: true,
   };
 
   spw = new SimplePeerWrapper(options);
@@ -72,9 +73,15 @@ function draw() {
   }
 }
 
+// Close simple-peer connections before exiting
+window.onbeforeunload = () => {
+  spw.close();
+};
+
 function keyTyped() {
   console.log('pressed ' + key);
   if (key === '0') {
     noLoop();
+    // spw.close();
   }
 }

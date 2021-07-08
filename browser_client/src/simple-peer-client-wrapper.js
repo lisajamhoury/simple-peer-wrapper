@@ -122,10 +122,19 @@ class SimplePeerClientWrapper {
     }
   }
 
-  //   // TO DO: Where should this be?
-  //   window.onbeforeunload = () => {
-  //     terminateSession();
-  //   };
+  terminateSession() {
+    for (let i = 0; i < this.connections.length; i++) {
+      const peer = this.connections[i].peer;
+      peer.destroy(); // simple-peer method to close and cleanup peer connection
+      this.connections[i].peer = null;
+      this.connections[i].peerStarted = false;
+    }
+
+    this.socket.emit('hangup');
+    this.socket.close();
+
+    emitSocketMessage('hangup');
+  }
 
   _sendSignal(data, connection) {
     this.debug && console.log('sending signal');
@@ -160,38 +169,20 @@ class SimplePeerClientWrapper {
     this.onDataCallback(decodedJSON);
   }
 
-  // _handleTrack(track, stream) {
-  //   this.onTrackCallback(track, stream);
-  // }
-
-  _terminateSession() {
-    for (let i = 0; i < this.connections.length; i++) {
-      const peer = this.connections[i].peer;
-      peer.destroy(); // simple-peer method to close and cleanup peer connection
-      this.connections[i].peer = null;
-      this.connections[i].peerStarted = false;
-    }
-
-    // TO DO destroy socket and associated rooms
-    this.socket.emit('hangup');
-    this.socket.close();
-
-    // emitSocketMessage('hangup');
-  }
-
-  // TODO: should this do anything by default? Look at feross... need to kill connections I think
   _handleClose() {
     if (typeof this.onCloseCallback !== 'undefined') {
       this.onCloseCallback();
     }
 
-    this.debug && console.log('GOT CLOSE');
+    this.debug && console.log('Closing Connection');
+    //// this._handleRemoteHangup();
     // closePeerConnection();
     // emitSocketMessage('bye');
   }
 
   _handleRemoteHangup() {
-    // log('Session terminated.');
+    this.debug && console.log('Handling remote hangup');
+    this.terminateSession(true);
     // closePeerConnection();
     // initiator = false;
   }
