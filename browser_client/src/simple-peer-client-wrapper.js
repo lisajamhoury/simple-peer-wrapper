@@ -5,11 +5,13 @@ class SimplePeerClientWrapper {
     this.initPeerRequest = false;
     this.socket = socket;
     this.localStream;
-    this.incomingStream;
-    this.newData = null;
     this.debug = debug;
     this.connections = [];
     this.onDataCallback;
+    this.onStreamCallback;
+    // this.onTrackCallback;
+    this.onCloseCallback;
+    this.onErrorCallback;
   }
 
   setlocalStream(stream) {
@@ -69,6 +71,9 @@ class SimplePeerClientWrapper {
     peer.on('error', (err) => this._handleError(err));
     peer.on('stream', (stream) => this._handleStream(stream));
     peer.on('data', (data) => this._handleData(data));
+    // peer.on('track', (track, stream) =>
+    //   this._handleTrack(track, stream),
+    // );
     peer.on('close', () => this._handleClose());
 
     connection.peerStarted = true;
@@ -86,8 +91,21 @@ class SimplePeerClientWrapper {
   }
 
   setEventCallback(event, callback) {
-    if (event === 'data') {
-      this.onDataCallback = callback;
+    switch (event) {
+      case 'data':
+        this.onDataCallback = callback;
+        break;
+      case 'stream':
+        this.onStreamCallback = callback;
+        break;
+      // case 'track':
+      //   this.onTrackCallback = callback;
+      //   break;
+      case 'close':
+        this.onCloseCallback = callback;
+        break;
+      case 'error':
+        this.onErrorCallback = callback;
     }
   }
 
@@ -104,31 +122,10 @@ class SimplePeerClientWrapper {
     }
   }
 
-  getData() {
-    if (this.newData !== null) {
-      return this.newData;
-    } else {
-      return null;
-    }
-  }
-
-  getStream() {
-    if (this.incomingStream !== null) {
-      return this.incomingStream;
-    } else {
-      return null;
-    }
-  }
-
   //   // TO DO: Where should this be?
   //   window.onbeforeunload = () => {
   //     terminateSession();
   //   };
-
-  // TO DO: Can this be erased ?
-  // isInitiator() {
-  //     return this.initiator;
-  // }
 
   _sendSignal(data, connection) {
     this.debug && console.log('sending signal');
@@ -146,20 +143,26 @@ class SimplePeerClientWrapper {
   }
 
   _handleStream(stream) {
-    console.log('handling stream');
-    this.incomingStream = stream;
+    this.onStreamCallback(stream);
   }
 
   _handleError(err) {
-    this.debug && console.log(err);
+    if (typeof this.onErrorCallback !== 'undefined') {
+      this.onErrorCallback(err);
+    } else {
+      console.log(err);
+    }
   }
 
   _handleData(data) {
     const decodedString = new TextDecoder('utf-8').decode(data);
     const decodedJSON = JSON.parse(decodedString);
-    // this.newData = decodedJSON;
     this.onDataCallback(decodedJSON);
   }
+
+  // _handleTrack(track, stream) {
+  //   this.onTrackCallback(track, stream);
+  // }
 
   _terminateSession() {
     for (let i = 0; i < this.connections.length; i++) {
@@ -176,7 +179,12 @@ class SimplePeerClientWrapper {
     // emitSocketMessage('hangup');
   }
 
+  // TODO: should this do anything by default? Look at feross... need to kill connections I think
   _handleClose() {
+    if (typeof this.onCloseCallback !== 'undefined') {
+      this.onCloseCallback();
+    }
+
     this.debug && console.log('GOT CLOSE');
     // closePeerConnection();
     // emitSocketMessage('bye');

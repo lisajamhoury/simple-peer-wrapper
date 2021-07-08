@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.WebRTCPeerClient = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SimplePeerWrapper = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -14283,44 +14283,11 @@ yeast.decode = decode;
 module.exports = yeast;
 
 },{}],73:[function(require,module,exports){
-const SocketIOClientWrapper = require('./socket-client.js');
+const SimplePeerWrapper = require('./simple-peer-wrapper.js');
 
-class Signal {
-  constructor(options) {
-    this.socketClient = new SocketIOClientWrapper(options);
-    this.peerClient = this.socketClient.peerClient;
-  }
+module.exports = SimplePeerWrapper;
 
-  connect() {
-    this.peerClient.init();
-  }
-
-  isConnectionStarted() {
-    return this.peerClient.isPeerStarted();
-  }
-
-  send(data) {
-    this.peerClient.sendData(data);
-  }
-
-  on(event, callback) {
-    this.peerClient.setEventCallback(event, callback);
-  }
-
-  // TODO: Use events instead!!! on.('data')
-  getData() {
-    return this.peerClient.getData();
-  }
-
-  // TODO: Use events instead!!! on.('stream')
-  getStream() {
-    return this.peerClient.getStream();
-  }
-}
-
-module.exports = Signal;
-
-},{"./socket-client.js":75}],74:[function(require,module,exports){
+},{"./simple-peer-wrapper.js":75}],74:[function(require,module,exports){
 const Peer = require('simple-peer');
 
 class SimplePeerClientWrapper {
@@ -14328,11 +14295,13 @@ class SimplePeerClientWrapper {
     this.initPeerRequest = false;
     this.socket = socket;
     this.localStream;
-    this.incomingStream;
-    this.newData = null;
     this.debug = debug;
     this.connections = [];
     this.onDataCallback;
+    this.onStreamCallback;
+    // this.onTrackCallback;
+    this.onCloseCallback;
+    this.onErrorCallback;
   }
 
   setlocalStream(stream) {
@@ -14392,6 +14361,9 @@ class SimplePeerClientWrapper {
     peer.on('error', (err) => this._handleError(err));
     peer.on('stream', (stream) => this._handleStream(stream));
     peer.on('data', (data) => this._handleData(data));
+    // peer.on('track', (track, stream) =>
+    //   this._handleTrack(track, stream),
+    // );
     peer.on('close', () => this._handleClose());
 
     connection.peerStarted = true;
@@ -14409,8 +14381,21 @@ class SimplePeerClientWrapper {
   }
 
   setEventCallback(event, callback) {
-    if (event === 'data') {
-      this.onDataCallback = callback;
+    switch (event) {
+      case 'data':
+        this.onDataCallback = callback;
+        break;
+      case 'stream':
+        this.onStreamCallback = callback;
+        break;
+      // case 'track':
+      //   this.onTrackCallback = callback;
+      //   break;
+      case 'close':
+        this.onCloseCallback = callback;
+        break;
+      case 'error':
+        this.onErrorCallback = callback;
     }
   }
 
@@ -14427,31 +14412,10 @@ class SimplePeerClientWrapper {
     }
   }
 
-  getData() {
-    if (this.newData !== null) {
-      return this.newData;
-    } else {
-      return null;
-    }
-  }
-
-  getStream() {
-    if (this.incomingStream !== null) {
-      return this.incomingStream;
-    } else {
-      return null;
-    }
-  }
-
   //   // TO DO: Where should this be?
   //   window.onbeforeunload = () => {
   //     terminateSession();
   //   };
-
-  // TO DO: Can this be erased ?
-  // isInitiator() {
-  //     return this.initiator;
-  // }
 
   _sendSignal(data, connection) {
     this.debug && console.log('sending signal');
@@ -14469,20 +14433,26 @@ class SimplePeerClientWrapper {
   }
 
   _handleStream(stream) {
-    console.log('handling stream');
-    this.incomingStream = stream;
+    this.onStreamCallback(stream);
   }
 
   _handleError(err) {
-    this.debug && console.log(err);
+    if (typeof this.onErrorCallback !== 'undefined') {
+      this.onErrorCallback(err);
+    } else {
+      console.log(err);
+    }
   }
 
   _handleData(data) {
     const decodedString = new TextDecoder('utf-8').decode(data);
     const decodedJSON = JSON.parse(decodedString);
-    // this.newData = decodedJSON;
     this.onDataCallback(decodedJSON);
   }
+
+  // _handleTrack(track, stream) {
+  //   this.onTrackCallback(track, stream);
+  // }
 
   _terminateSession() {
     for (let i = 0; i < this.connections.length; i++) {
@@ -14499,7 +14469,12 @@ class SimplePeerClientWrapper {
     // emitSocketMessage('hangup');
   }
 
+  // TODO: should this do anything by default? Look at feross... need to kill connections I think
   _handleClose() {
+    if (typeof this.onCloseCallback !== 'undefined') {
+      this.onCloseCallback();
+    }
+
     this.debug && console.log('GOT CLOSE');
     // closePeerConnection();
     // emitSocketMessage('bye');
@@ -14521,8 +14496,36 @@ class SimplePeerClientWrapper {
 module.exports = SimplePeerClientWrapper;
 
 },{"simple-peer":41}],75:[function(require,module,exports){
+const SocketIOClientWrapper = require('./socket-io-client-wrapper.js');
+
+class SimplePeerWrapper {
+  constructor(options) {
+    this.socketClient = new SocketIOClientWrapper(options);
+    this.peerClient = this.socketClient.peerClient;
+  }
+
+  connect() {
+    this.peerClient.init();
+  }
+
+  isConnectionStarted() {
+    return this.peerClient.isPeerStarted();
+  }
+
+  send(data) {
+    this.peerClient.sendData(data);
+  }
+
+  on(event, callback) {
+    this.peerClient.setEventCallback(event, callback);
+  }
+}
+
+module.exports = SimplePeerWrapper;
+
+},{"./socket-io-client-wrapper.js":76}],76:[function(require,module,exports){
 const io = require('socket.io-client');
-const SimplePeerClientWrapper = require('./peer-client.js');
+const SimplePeerClientWrapper = require('./simple-peer-client-wrapper.js');
 
 // const turnRequest = require('./turnRequest');
 //     turnRequest();
@@ -14686,5 +14689,5 @@ class SocketIOClientWrapper {
 
 module.exports = SocketIOClientWrapper;
 
-},{"./peer-client.js":74,"socket.io-client":57}]},{},[73])(73)
+},{"./simple-peer-client-wrapper.js":74,"socket.io-client":57}]},{},[73])(73)
 });

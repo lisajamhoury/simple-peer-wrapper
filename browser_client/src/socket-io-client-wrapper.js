@@ -1,5 +1,5 @@
 const io = require('socket.io-client');
-const SimplePeerClientWrapper = require('./peer-client.js');
+const SimplePeerClientWrapper = require('./simple-peer-client-wrapper.js');
 
 // const turnRequest = require('./turnRequest');
 //     turnRequest();

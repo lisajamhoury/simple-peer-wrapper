@@ -7,6 +7,8 @@
 
 let myMousePosition = {};
 let otherUsers = [];
+let signal;
+let newData;
 
 const size = 50;
 
@@ -17,34 +19,27 @@ function setup() {
 
   // Start socket client automatically on load
   // By default it connects to http://localhost:80
-  WebRTCPeerClient.initSocketClient();
+  signal = new WebRTCPeerClient();
+  signal.connect();
+  signal.on('data', gotData);
+}
 
-  // To connect to server over public internet pass the ngrok address
-  // See https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples#to-run-signal-server-online-with-ngrok
-  // const options = {
-  //   serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
-  // };
-  // WebRTCPeerClient.initSocketClient(options);
-
-  // Start the peer client
-  WebRTCPeerClient.initPeerClient();
+function gotData(data) {
+  newData = data;
 }
 
 function draw() {
   // only proceed if the peer is started
-  if (!WebRTCPeerClient.isPeerStarted()) {
+  if (!signal.isConnectionStarted()) {
     return;
   }
 
   // get and send my mouse position over peer
   myMousePosition = { x: mouseX, y: mouseY };
-  WebRTCPeerClient.sendData(myMousePosition);
+  signal.send(myMousePosition);
 
-  // get data from peer
-  const newData = WebRTCPeerClient.getData();
-
-  // if there's no data, don't continue
-  if (newData === null) {
+  if (typeof newData === 'undefined') {
+    console.log('returning ');
     return;
   }
 
