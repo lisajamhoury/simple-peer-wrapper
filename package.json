@@ -1,16 +1,16 @@
 {
-  "name": "browser_client",
+  "name": "simple-peer-wrapper",
   "version": "1.0.0",
-  "description": "",
-  "private": true,
+  "description": "A wrapper for simple-peer that includes a socket.io signaling server client. To be used in the browser with simple-peer-server on your server.",
+  "repository": "https://github.com/lisajamhoury/simple-peer-wrapper",
+  "main": "dist/simple-peer-wrapper.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify src/index.js --standalone SimplePeerWrapper > dist/webrtc_peer_client.js",
-    "watch": "watchify src/index.js --standalone SimplePeerWrapper -o dist/webrtc_peer_client.js"
+    "build": "browserify src/index.js --standalone SimplePeerWrapper > dist/simple-peer-wrapper.js",
+    "watch": "watchify src/index.js --standalone SimplePeerWrapper -o dist/simple-peer-wrapper.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "lisajamhoury",
+  "license": "MIT",
   "devDependencies": {
     "browserify": "^16.5.0",
     "watchify": "^3.11.1"
