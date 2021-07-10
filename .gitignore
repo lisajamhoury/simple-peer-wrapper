@@ -1,3 +1,2 @@
 .DS_Store
-express_server/node_modules
-browser_client/node_modules
+node_modules
