@@ -1,45 +1,28 @@
-// WebRTC Simple Peer Example — Mouse over webRTC
-// https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
-// Created for The Body Everywhere and Here
-// https://github.com/lisajamhoury/The-Body-Everywhere-And-Here/
+// Simple Peer Wrapper Example — Data
+// https://github.com/lisajamhoury/simple-peer-wrapper
 
-// This example allows for two users to draw on the same p5 canvas
-// using webRTC peer connections. By default it runs over localhost.
-// Use with ngrok pointing to localhost:80 to run over the public internet.
-// Use keys 1-4 to switch between four animation states
-
-// p5 code goes here
+// This example allows for two users to draw on the same p5.js canvas
+// using webRTC peer connections. It requires that a simple-peer-server
+// running to connect the two peers.
+// See https://github.com/lisajamhoury/simple-peer-server
 
 // Include this for to use p5 autofill in vscode
 // See https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
-// Peer variables
-let startPeer;
 let partnerMousePosition;
 let myMousePosition = {};
 
-let signal;
-
-// What interaction are we running?
-// We start with interaction 1
-let state = 1;
-
-// Globals for lerping in heartbeat animation
-let step = 0.1;
-let amount = 0;
-
-// Globals for growing animation
-const origSize = 50;
-let size = origSize;
+let spw;
 
 // Colors used for drawing mouse ellipses
 const colors = {
-  x: 'rgba(0, 63, 84, 0.5)',
-  y: 'rgba(49, 128, 144, 0.5)',
-  z: 'rgba(82, 100, 118, 0.5)',
+  x: 'rgba(16, 157, 227, 0.5)',
+  y: 'rgba(227, 86, 16, 0.5)',
 };
+
+const size = 50;
 
 // Setup() is a p5 function
 // See this example if this is new to you
@@ -55,10 +38,10 @@ function setup() {
     // debug: true,
   };
 
-  signal = new WebRTCPeerClient(options);
+  spw = new SimplePeerWrapper(options);
 
-  signal.connect();
-  signal.on('data', gotData);
+  spw.connect();
+  spw.on('data', gotData);
 }
 
 function gotData(data) {
@@ -70,14 +53,14 @@ function gotData(data) {
 // https://p5js.org/examples/structure-setup-and-draw.html
 function draw() {
   // Only proceed if the peer connection is started
-  if (!signal.isConnectionStarted()) {
+  if (!spw.isConnectionStarted()) {
     console.log('returning');
     return;
   }
 
   // Get and send my mouse position over peer connection
   myMousePosition = { x: mouseX, y: mouseY };
-  signal.send(myMousePosition);
+  spw.send(myMousePosition);
 
   // Draw a white background with alpha of 50
   background(255, 50);
