@@ -1,36 +1,58 @@
-// p5 code goes here
+// Simple Peer Wrapper Example — Data with Multiple Users
+// https://github.com/lisajamhoury/simple-peer-wrapper
 
-// include this for to use autofill in vscode
+// This example allows for multiple users to draw on the same p5.js canvas
+// using webRTC peer connections. It requires that a simple-peer-server
+// is running to connect the two peers.
+// See https://github.com/lisajamhoury/simple-peer-server
+
+// Include this for to use autofill in vscode
 // see https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
 let myMousePosition = {};
-let otherUsers = [];
+let otherMouses = [];
 let spw;
 let newData;
 
 const size = 50;
 
+// Setup() is a p5 function
+// See this example if this is new to you
+// https://p5js.org/examples/structure-setup-and-draw.html
 function setup() {
+  // Make a p5 canvas 500 pixels wide and 500 pixels high
   createCanvas(500, 500);
-  frameRate(60); // try 30 if latency
+
+  // Fix the framerate to throttle data sending
+  frameRate(30);
+
+  // Set color mode
   colorMode(HSB, 255);
 
-  // Start socket client automatically on load
-  // By default it connects to http://localhost:80
+  // Create a new simple-peer-wrapper
   spw = new SimplePeerWrapper();
+
+  // Make the peer connection
   spw.connect();
+
+  // When data recieved over the connection call gotData
   spw.on('data', gotData);
 }
 
 function gotData(data) {
+  // Store incoming data in a global variable
   newData = data;
 }
 
+// Draw() is a p5 function
+// See this example if this is new to you
+// https://p5js.org/examples/structure-setup-and-draw.html
 function draw() {
-  // only proceed if the peer is started
+  // Only proceed if the peer connection is started
   if (!spw.isConnectionStarted()) {
+    console.log('Returning. Waiting for connection to begin.');
     return;
   }
 
@@ -38,19 +60,20 @@ function draw() {
   myMousePosition = { x: mouseX, y: mouseY };
   spw.send(myMousePosition);
 
+  // Only proceed if we have at least one other mouse position
   if (typeof newData === 'undefined') {
-    console.log('returning ');
+    console.log('Returning. Waiting for another mouse to join.');
     return;
   }
 
   let foundMatch = false;
 
   // see if the data is from a user that already exists
-  for (let i = 0; i < otherUsers.length; i++) {
+  for (let i = 0; i < otherMouses.length; i++) {
     // if the user exists
-    if (newData.userId === otherUsers[i].userId) {
+    if (newData.userId === otherMouses[i].userId) {
       // update their position
-      otherUsers[i].position = newData.data;
+      otherMouses[i].position = newData.data;
       // we found a match!
       foundMatch = true;
     }
@@ -66,11 +89,11 @@ function draw() {
     };
 
     // add them to the array
-    otherUsers.push(newUser);
+    otherMouses.push(newUser);
   }
 
   // make sure we have at least one partner before drawing
-  if (otherUsers.length < 1) return;
+  if (otherMouses.length < 1) return;
 
   // use some opacity on background for trails
   background(255, 50);
@@ -81,11 +104,11 @@ function draw() {
   ellipse(myMousePosition.x, myMousePosition.y, size, size);
 
   // draw all the other mice
-  for (let i = 0; i < otherUsers.length; i++) {
-    fill(otherUsers[i].color, 255, 255);
+  for (let i = 0; i < otherMouses.length; i++) {
+    fill(otherMouses[i].color, 255, 255);
     ellipse(
-      otherUsers[i].position.x,
-      otherUsers[i].position.y,
+      otherMouses[i].position.x,
+      otherMouses[i].position.y,
       size,
       size,
     );

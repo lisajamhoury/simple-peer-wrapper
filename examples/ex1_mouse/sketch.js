@@ -3,7 +3,7 @@
 
 // This example allows for two users to draw on the same p5.js canvas
 // using webRTC peer connections. It requires that a simple-peer-server
-// running to connect the two peers.
+// is running to connect the two peers.
 // See https://github.com/lisajamhoury/simple-peer-server
 
 // Include this for to use p5 autofill in vscode
@@ -31,16 +31,21 @@ function setup() {
   // Make a p5 canvas 500 pixels wide and 500 pixels high
   createCanvas(500, 500);
 
-  // Fix the framerate to throttle data sending and receiving
+  // Fix the framerate to throttle data sending
   frameRate(30);
 
+  // Include wrapper options here
   const options = {
     // debug: true,
   };
 
+  // Create a new simple-peer-wrapper
   spw = new SimplePeerWrapper(options);
 
+  // Make the peer connection
   spw.connect();
+
+  // When data recieved over the connection call gotData
   spw.on('data', gotData);
 }
 
@@ -83,3 +88,8 @@ function draw() {
     ellipse(partnerMousePosition.x, partnerMousePosition.y, size);
   }
 }
+
+// Close simple-peer connections before exiting
+window.onbeforeunload = () => {
+  spw.close();
+};
