@@ -1,16 +1,13 @@
-// WebRTC Simple Peer Example — Video over webRTC
-// https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
-// Created for The Body Everywhere and Here
-// https://github.com/lisajamhoury/The-Body-Everywhere-And-Here/
+// Simple Peer Wrapper Example — Video
+// https://github.com/lisajamhoury/simple-peer-wrapper
 
-// This example allows for two users to share video streams
-// using webRTC peer connections. By default it runs over localhost.
-// Use with ngrok pointing to localhost:80 to run over the public internet.
+// This example allows for two users to share video on a p5.js canvas
+// using webRTC peer connections. It requires that a simple-peer-server
+// is running to connect the two peers.
+// See https://github.com/lisajamhoury/simple-peer-server
 
-// p5 code goes here
-
-// Include this for to use p5 autofill in vscode
-// See https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
+// Include this for to use autofill in vscode
+// see https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
@@ -20,7 +17,11 @@ let partnerStream = null;
 let partnerStreamStarted = false;
 let spw;
 
+// Setup() is a p5 function
+// See this example if this is new to you
+// https://p5js.org/examples/structure-setup-and-draw.html
 function setup() {
+  // Make a p5 canvas to fit resolution of webcams
   createCanvas(640, 240);
 
   // create my webcam video and hide it
@@ -38,19 +39,27 @@ function setup() {
 function gotMedia(stream) {
   const options = {
     stream: stream,
-    debug: true,
   };
 
+  // Create a new simple-peer-wrapper with a webcam stream
   spw = new SimplePeerWrapper(options);
+
+  // Make the peer connection
   spw.connect();
+
+  // When a stream is received call gotStream
   spw.on('stream', gotStream);
 }
 
 function gotStream(stream) {
+  // Store incoming stream in a global variable
   partnerStream = stream;
   if (!partnerStreamStarted) partnerStreamStarted = true;
 }
 
+// Draw() is a p5 function
+// See this example if this is new to you
+// https://p5js.org/examples/structure-setup-and-draw.html
 function draw() {
   background(255);
 
@@ -77,11 +86,3 @@ function draw() {
 window.onbeforeunload = () => {
   spw.close();
 };
-
-function keyTyped() {
-  console.log('pressed ' + key);
-  if (key === '0') {
-    noLoop();
-    // spw.close();
-  }
-}

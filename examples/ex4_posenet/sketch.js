@@ -1,22 +1,18 @@
-// WebRTC Simple Peer Example — Posenet Skeleton (No Mirroring)
-// https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
-// Created for The Body Everywhere and Here
-// https://github.com/lisajamhoury/The-Body-Everywhere-And-Here/
+// Simple Peer Wrapper Example — PoseNet
+// https://github.com/lisajamhoury/simple-peer-wrapper
 
 // This example allows for two users to interact on the same p5 canvas
-// using posenet via ml5. By default it runs over localhost.
-// Use with ngrok pointing to localhost:80 to run over the public internet.
-// See readme.md for additional instructions
+// using posenet via ml5 sent over webRTC peer connections.
+// It requires that a simple-peer-server is running to connect the two peers.
+// See https://github.com/lisajamhoury/simple-peer-server
 
-// p5 code goes here
-
-// include this to use p5 autofill in vscode
-// see https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
+// Include this for to use p5 autofill in vscode
+// See https://stackoverflow.com/questions/30136319/what-is-reference-path-in-vscode
 /// <reference path="../shared/p5.d/p5.d.ts" />
 /// <reference path="../shared/p5.d/p5.global-mode.d.ts" />
 
-// Peer variables
-let startPeer;
+// Variable to hold SimplePeerWrapper
+let spw;
 
 // Posenet variables
 let video;
@@ -30,6 +26,11 @@ let partnerPose = {};
 let myNose;
 let partnerNose;
 
+// Use an offset if testing with just one person and webcam
+// This allows you to see both skeletons
+// Set to 0 if not needed
+const partnerOffset = 100;
+
 // Confidence threshold for posenet keypoints
 const scoreThreshold = 0.5;
 
@@ -41,7 +42,6 @@ let size = origSize;
 const colors = {
   x: 'rgba(200, 63, 84, 0.5)',
   y: 'rgba(49, 128, 144, 0.5)',
-  z: 'rgba(82, 100, 118, 0.5)',
 };
 
 // Setup() is a p5 function
@@ -55,35 +55,8 @@ function setup() {
   video = createCapture(VIDEO);
   video.size(width, height);
 
-  // Options for posenet
-  // See https://ml5js.org/reference/api-PoseNet/
-  // Use these options for slower computers, esp architecture
-  const options = {
-    architecture: 'MobileNetV1',
-    imageScaleFactor: 0.3,
-    outputStride: 16,
-    flipHorizontal: true,
-    minConfidence: 0.5,
-    scoreThreshold: 0.5,
-    nmsRadius: 20,
-    detectionType: 'single',
-    inputResolution: 513,
-    multiplier: 0.75,
-    quantBytes: 2,
-  };
-
-  // Computers with more robust gpu can handle architecture 'ResNet50'
-  // It is more accurate at the cost of speed
-  // const options = {
-  //   architecture: 'ResNet50',
-  //   outputStride: 32,
-  //   detectionType: 'single',
-  //  flipHorizontal: true,
-  //   quantBytes: 2,
-  // };
-
   // Create poseNet to run on webcam and call 'modelReady' when ready
-  poseNet = ml5.poseNet(video, options, modelReady);
+  poseNet = ml5.poseNet(video, modelReady);
 
   // Everytime we get a pose from posenet, call "getPose"
   // and pass in the results
@@ -92,19 +65,18 @@ function setup() {
   // Hide the webcam element, and just show the canvas
   video.hide();
 
-  // Start socket client automatically on load
-  // By default it connects to http://localhost:80
-  WebRTCPeerClient.initSocketClient();
+  // Create a new simple-peer-wrapper
+  spw = new SimplePeerWrapper();
 
-  // To connect to server over public internet pass the ngrok address
-  // See https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples#to-run-signal-server-online-with-ngrok
-  // const options = {
-  //   serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
-  // };
-  // WebRTCPeerClient.initSocketClient(options);
+  // Make the peer connection
+  spw.connect();
 
-  // Start the peer client
-  WebRTCPeerClient.initPeerClient();
+  // When data recieved over the connection call gotData
+  spw.on('data', gotData);
+}
+
+function gotData(data) {
+  partnerPose = data.data;
 }
 
 // Draw() is a p5 function
@@ -114,29 +86,15 @@ function draw() {
   // Only proceed if the peer is started
   // And if there is a pose from posenet
   if (
-    !WebRTCPeerClient.isPeerStarted() ||
+    !spw.isConnectionStarted() ||
     typeof myPose.pose === 'undefined'
   ) {
-    console.log('returning!');
+    console.log('returning! waiting for my pose');
     return;
-  }
-
-  // Get the incoming data from the peer connection
-  const newData = WebRTCPeerClient.getData();
-
-  // Check if there's anything in the data
-  if (newData === null) {
-    return;
-    // If there is data
-  } else {
-    // Get the pose data from newData.data
-    // newData.data is the data sent by user
-    // newData.userId is the peer ID of the user
-    partnerPose = newData.data;
   }
 
   // If we don't yet have a partner pose
-  if (partnerPose === null) {
+  if (typeof partnerPose.pose === 'undefined') {
     // Return and try again for partner pose
     console.log('waiting for partner');
     return;
@@ -152,15 +110,15 @@ function draw() {
   background(255);
 
   // Draw my keypoints and skeleton
-  drawKeypoints(myPose, colors.x, 0); // draw keypoints
-  drawSkeleton(myPose, colors.x, 0); // draw skeleton
+  drawKeypoints(myPose, colors.x, partnerOffset); // draw keypoints
+  drawSkeleton(myPose, colors.x, partnerOffset); // draw skeleton
 
   // Draw partner keypoints and skeleton
   drawKeypoints(partnerPose, colors.y, 0);
   drawSkeleton(partnerPose, colors.y, 0);
 
   // If our noses are touching
-  if (touching(myNose, partnerNose)) {
+  if (touching(myNose, partnerNose, partnerOffset)) {
     console.log('touching');
     // Increase the keypoint size
     size *= 1.01;
@@ -186,8 +144,8 @@ function getPose(poses) {
   myPose = poses[0];
 
   // Send my pose over peer if the peer is started
-  if (WebRTCPeerClient.isPeerStarted()) {
-    WebRTCPeerClient.sendData(myPose);
+  if (spw.isConnectionStarted()) {
+    spw.send(myPose);
   }
 }
 
@@ -248,9 +206,9 @@ function getNose(pose) {
 }
 
 // Function to see if two points are "touching"
-function touching(nose1, nose2) {
+function touching(nose1, nose2, offset) {
   // Get the distance between the two noses
-  const d = dist(nose1.x, nose1.y, nose2.x, nose2.y);
+  const d = dist(nose1.x, nose1.y, nose2.x + offset, nose2.y);
 
   // If the distance is less than 50 pixels we are touching!
   if (d < 50) {
