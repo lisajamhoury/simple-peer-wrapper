@@ -65,8 +65,12 @@ function setup() {
   // Hide the webcam element, and just show the canvas
   video.hide();
 
+  const options = {
+    // serverUrl: 'https://simplepeerserver.net',
+  };
+
   // Create a new simple-peer-wrapper
-  spw = new SimplePeerWrapper();
+  spw = new SimplePeerWrapper(options);
 
   // Make the peer connection
   spw.connect();

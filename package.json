@@ -1,22 +1,40 @@
 {
   "name": "simple-peer-wrapper",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A wrapper for simple-peer that includes a socket.io signaling server client. To be used in the browser with simple-peer-server on your server.",
   "repository": "https://github.com/lisajamhoury/simple-peer-wrapper",
-  "main": "dist/simple-peer-wrapper.js",
+  "main": "src/index.js",
   "scripts": {
-    "build": "browserify src/index.js --standalone SimplePeerWrapper > dist/simple-peer-wrapper.js",
-    "watch": "watchify src/index.js --standalone SimplePeerWrapper -o dist/simple-peer-wrapper.js"
+    "build": "browserify src/index.js -s SimplePeerWrapper -r | minify > dist/simple-peer-wrapper.min.js",
+    "watch": "watchify src/index.js -s SimplePeerWrapper -o dist/simple-peer-wrapper.js"
   },
-  "keywords": [],
+  "keywords": [
+    "data",
+    "data channel",
+    "data channel stream",
+    "data channels",
+    "p2p",
+    "peer",
+    "peer connection",
+    "peer-to-peer",
+    "simple-peer",
+    "signaling server",
+    "socket server",
+    "stream",
+    "video",
+    "voice",
+    "webrtc",
+    "webrtc stream"
+  ],
   "author": "lisajamhoury",
   "license": "MIT",
   "devDependencies": {
+    "babel-minify": "^0.5.1",
     "browserify": "^16.5.0",
     "watchify": "^3.11.1"
   },
   "dependencies": {
     "simple-peer": "^9.6.0",
-    "socket.io-client": "^2.3.0"
+    "socket.io-client": "^4.1.3"
   }
 }
