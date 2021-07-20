@@ -31,8 +31,14 @@ function setup() {
   // Set color mode
   colorMode(HSB, 255);
 
+  // Include wrapper options here
+  const options = {
+    debug: false,
+    serverUrl: 'http://localhost:8081',
+  };
+
   // Create a new simple-peer-wrapper
-  spw = new SimplePeerWrapper();
+  spw = new SimplePeerWrapper(options);
 
   // Make the peer connection
   spw.connect();

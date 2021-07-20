@@ -37,7 +37,7 @@ function setup() {
   // Include wrapper options here
   const options = {
     debug: false,
-    serverUrl: 'https://simplepeerserver.net',
+    serverUrl: 'http://localhost:8081',
   };
 
   // Create a new simple-peer-wrapper

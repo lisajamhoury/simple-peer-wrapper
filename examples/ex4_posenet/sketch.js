@@ -65,8 +65,10 @@ function setup() {
   // Hide the webcam element, and just show the canvas
   video.hide();
 
+  // Include wrapper options here
   const options = {
-    // serverUrl: 'https://simplepeerserver.net',
+    debug: false,
+    serverUrl: 'http://localhost:8081',
   };
 
   // Create a new simple-peer-wrapper
