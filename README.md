@@ -28,6 +28,48 @@ Once you have your TURN servers setup, see the documentation below for how to in
 
 # Usage
 
+### Add simple-peer-wrapper to your project
+
+You must first include this package in your client side code. You can do this one of two ways.
+
+Option 1: Install the package using npm or your favorite package manager. Then require the package in your app.
+
+```bash
+# in your terminal
+
+npm install simple-peer-wrapper
+```
+
+```javascript
+// in your client code
+
+const SimplePeerWrapper = require('simple-peer-wrapper');
+```
+
+Option 2: Include the simple-peer-wrapper.min.js as a standalone script in a `<script>` tag. This exports a SimplePeerWrapper constructor on the window
+
+```html
+<script src="simple-peer-wrapper.min.js"></script>
+```
+
+### Create and connect
+
+TKTKTK
+
+### Do something with the data
+
+TKTKTK
+
+### Remember to hangup
+
+TKTKTK
+
+# API
+
+TKTKTK
+
+# Running the examples
+
 TKTKTK
 
 ```javascript
