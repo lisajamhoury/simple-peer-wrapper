@@ -12751,7 +12751,7 @@ module.exports = SimplePeerWrapper;
 const Peer = require('simple-peer');
 
 class SimplePeerClientWrapper {
-  constructor(socket, debug) {
+  constructor(socket, debug, simplePeerOptions) {
     this.initPeerRequest = false;
     this.socket = socket;
     this.localStream;
@@ -12762,6 +12762,7 @@ class SimplePeerClientWrapper {
     // this.onTrackCallback;
     this.onCloseCallback;
     this.onErrorCallback;
+    this.simplePeerOptions = simplePeerOptions;
   }
 
   setlocalStream(stream) {
@@ -12801,18 +12802,9 @@ class SimplePeerClientWrapper {
 
   createPeerConnection(connection) {
     this.debug && console.log('creating simple peer');
-    let peer;
 
-    if (typeof this.localStream === 'undefined') {
-      peer = new Peer({
-        initiator: connection.initiator,
-      });
-    } else {
-      peer = new Peer({
-        initiator: connection.initiator,
-        stream: this.localStream,
-      });
-    }
+    const options = this._getPeerOptions(connection.initiator);
+    const peer = new Peer(options);
 
     // If initiator,peer.on'signal' will fire right away, if not it waits for signal
     // https://github.com/feross/simple-peer#peeronsignal-data--
@@ -12884,6 +12876,26 @@ class SimplePeerClientWrapper {
     this.socket.close();
 
     emitSocketMessage('hangup');
+  }
+
+  _getPeerOptions(initiator) {
+    const options = {
+      initiator: initiator,
+    };
+
+    if (typeof this.localStream !== 'undefined') {
+      options.stream = this.localStream;
+    }
+
+    const spOptions = Object.entries(this.simplePeerOptions);
+
+    if (spOptions.length > 0) {
+      for (const [key, value] of spOptions) {
+        options[key] = value;
+      }
+    }
+
+    return options;
   }
 
   _sendSignal(data, connection) {
@@ -12982,22 +12994,28 @@ module.exports = SimplePeerWrapper;
 const io = require('socket.io-client');
 const SimplePeerClientWrapper = require('./simple-peer-client-wrapper.js');
 
-// const turnRequest = require('./turnRequest');
-//     turnRequest();
-
 class SocketIOClientWrapper {
   constructor({
     stream,
-    serverUrl = 'http://localhost:8081',
+    serverUrl,
     debug = false,
+    simplePeerOptions = {},
   } = {}) {
     this.debug = debug;
 
+    if (typeof serverUrl === 'undefined') {
+      console.error(
+        'simple-peer-wrapper requires that you specify a serverUrl on startup. Please specify a serverUrl and try again. See documentation for more information https://github.com/lisajamhoury/simple-peer-wrapper',
+      );
+    }
+
     this.debug && console.log('connecting socket to ' + serverUrl);
     this.socket = io.connect(serverUrl);
+
     this.peerClient = new SimplePeerClientWrapper(
       this.socket,
       this.debug,
+      simplePeerOptions,
     );
 
     if (typeof stream !== 'undefined') {

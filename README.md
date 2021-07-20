@@ -1,125 +1,42 @@
-# Browser to Browser Connection with Simple Peer, Socket.io and Express
+# simple-peer-wrapper
 
-This combines an Express Server with Socket.io Signal Server, and [Simple Peer](https://github.com/feross/simple-peer).
+Simple-peer-wrapper provides a [signaling server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling) client for [simple-peer](https://github.com/feross/simple-peer). It is meant to be used with [simple-peer-server](https://github.com/lisajamhoury/simple-peer-server) as the signaling server.
 
-It runs a Socket.io signal server, then a peer connection over webRTC using Simple-Peer between two browser windows. Express serves the signal server. This currently runs over localhost. The express server is on port 3000. The socket server is on port 80.
+# Why use simple-peer-wrapper
 
-## To Use
+WebRTC peer connections are an excellent tool for building synchronous drawing, dancing, text, or video applications.
 
-To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. If you're using Windows 10, make sure you've enabled [Developer Mode](https://mywindowshub.com/how-to-enable-developer-mode-in-your-windows-10-computer/).
+[Simple-peer](https://github.com/feross/simple-peer) is an excellent library for creating webRTC peer connections, however, it does not include a signaling server, which is necessary for establishing the peer connections used by simple-peer.
 
-From your command line:
+# How simple-peer-wrapper works
 
-```bash
-# Clone this repository (Mac only, see next line for Windows instructions)
-$ git clone https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
-# If on Windows you must allow for symlinks as follows
-$ git clone -c core.symlinks=true https://github.com/lisajamhoury/WebRTC-Simple-Peer-Examples
+Simple-peer-wrapper wraps [simple-peer](https://github.com/feross/simple-peer) together with a [Socket.IO client](https://socket.io/docs/v3/client-api/index.html) that communicates with a [signaling server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling). Simple-peer-wrapper handles the signaling and the creation of the peer connection, then exposes the peer connection to be used in your client code.
 
-# Install and Run the Server and First Client
-# Go into the Express application folder
-$ cd WebRTC-Simple-Peer-Examples/express_server
-# Install dependencies
-$ npm install
-# Run the Express app — this will start the signaling server and first client
-# It will watch and autorefresh on changes
-$ npm run watch
+# A note on STUN and TURN servers
 
-# Install and Run the Second Client
-# In a new command line window, go into the client folder
-$ cd WebRTC-Simple-Peer-Examples/browser_client
-# Install dependencies
-$ npm install
-# Run a simple python server on your localhost
-# If python 2
-$ python -m SimpleHTTPServer 8000
-# If python 3
-$ python -m http.server 8000
+Simple-peer-server and simple-peer-wrapper together provide a [signaling server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling) and client that establish a connection between two or more peers.
 
-# To make changes to the client module
-# In a third command line window, go into the client folder
-$ cd WebRTC-Simple-Peer-Examples/browser_client
-# Run watchify
-$ npm run watch
-```
+They use [Socket.IO](https://socket.io/) to transport the signaling messages, then create the peer connections via [simple-peer](https://github.com/feross/simple-peer).
 
-Open http://localhost:3000 in your browser to see first client. Open http://localhost:8000/examples in your browser to start the second client. Open the developer console (option+command+I) to see communication between Server and clients.
+If you are launching your application on the public internet, you will likely need STUN and TURN servers as well. (About [86% of connections can be created with just STUN servers](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/), but the remaining connections require TURN servers.)
 
-## API
+Default STUN servers are provided by simple-peer. Although they can be overwritten (see documentation on this below). TURN servers can be expensive to maintain and need to be provided by the application developer (that's probably you if you're reading this ;).
 
-### .initSocketClient({options})
+To learn more about signaling, STUN, and TURN servers, I recommend [this article by Sam Dutton](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/). You may find this article from Gabriel Turner on [How to set up and configure your own TURN server using Coturn](https://gabrieltanner.org/blog/turn-server) helpful. You could also check out paid services like [Twilio's Network Traversal Service](https://www.twilio.com/stun-turn).
 
-Makes a connection from the client to the socket server. Must be called before .initPeerClient().
+Once you have your TURN servers setup, see the documentation below for how to include add them to your peer connections.
 
-#### options
+# Usage
 
-serverUrl — Pass the url of your socket server. By default it will be at http://localhost:8081. To make available to the public internet, use your own server or run with ngrok (instructions below).
-stream — Pass a video stream.
+TKTKTK
 
 ```javascript
-const options = {
-  serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
-  stream: stream,
-};
-
-WebRTCPeerClient.initSocketClient(options);
-WebRTCPeerClient.initPeerClient();
+simplePeerOptions: {
+    config: {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+    ],
+    },
+},
 ```
-
-### .initPeerClient()
-
-Makes a request for a peer connection to each of the available peers on the network.
-
-### .isInitiator()
-
-The initiator is the peer who initiated the peer connection. Returns true or false.
-
-### .sendData(data)
-
-Used to send data to all other peers on the network. Data should be sent in JSON format.
-
-### .getData()
-
-Retrieves data from the peer. Provides data from and id of the sending peer. `{ data: data, userId: socket.id }`
-
-### .isPeerStarted()
-
-Logs if the peer connection is started or not. Returns true of false.
-
-### .setDebug(debug)
-
-Turns server and peer logs on and off. Takes a boolean: true or false.
-
-## To Run Signal Server Online With NGROK
-
-The signal server runs on localhost at port 80 (http://127.0.0.1:80) by default. If you'd like to run the server on a public network you can run it with [ngrok](https://ngrok.com/). It takes less than five minutes to set up!
-
-1. Go to [ngrok.com](https://ngrok.com/) and setup an account.
-2. Follow the three-step instructions under setup and installation (Unzip, connect, fire it up!)
-
-```bash
-
-$ cd folder_containing_ngrok
-$ ./ngrok http 8081
-
-```
-
-For Windows 10 users: For step 2 and 3 use `ngrok` rather than `./ngrok`, so the command for step 2 would be `ngrok authtoken < your auth token >`. You can also double click on the ngrok icon to run on port 80 rather than using the command line for step 3.
-
-3. Find your ngrok address and add it to your sketch code. For example:
-
-```javascript
-// in file /browser_client/examples/example1_mouse/sketch.js
-
-const options = {
-  serverUrl: 'https://9bf0ae2ca82a.ngrok.io',
-  stream: stream,
-};
-
-WebRTCPeerClient.initSocketClient(options);
-WebRTCPeerClient.initPeerClient();
-```
-
-## License
-
-[CC0 1.0 (Public Domain)](LICENSE.md)

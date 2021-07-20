@@ -1,22 +1,28 @@
 const io = require('socket.io-client');
 const SimplePeerClientWrapper = require('./simple-peer-client-wrapper.js');
 
-// const turnRequest = require('./turnRequest');
-//     turnRequest();
-
 class SocketIOClientWrapper {
   constructor({
     stream,
-    serverUrl = 'http://localhost:8081',
+    serverUrl,
     debug = false,
+    simplePeerOptions = {},
   } = {}) {
     this.debug = debug;
 
+    if (typeof serverUrl === 'undefined') {
+      console.error(
+        'simple-peer-wrapper requires that you specify a serverUrl on startup. Please specify a serverUrl and try again. See documentation for more information https://github.com/lisajamhoury/simple-peer-wrapper',
+      );
+    }
+
     this.debug && console.log('connecting socket to ' + serverUrl);
     this.socket = io.connect(serverUrl);
+
     this.peerClient = new SimplePeerClientWrapper(
       this.socket,
       this.debug,
+      simplePeerOptions,
     );
 
     if (typeof stream !== 'undefined') {

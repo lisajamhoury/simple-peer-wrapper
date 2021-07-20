@@ -1,7 +1,7 @@
 const Peer = require('simple-peer');
 
 class SimplePeerClientWrapper {
-  constructor(socket, debug) {
+  constructor(socket, debug, simplePeerOptions) {
     this.initPeerRequest = false;
     this.socket = socket;
     this.localStream;
@@ -12,6 +12,7 @@ class SimplePeerClientWrapper {
     // this.onTrackCallback;
     this.onCloseCallback;
     this.onErrorCallback;
+    this.simplePeerOptions = simplePeerOptions;
   }
 
   setlocalStream(stream) {
@@ -51,18 +52,9 @@ class SimplePeerClientWrapper {
 
   createPeerConnection(connection) {
     this.debug && console.log('creating simple peer');
-    let peer;
 
-    if (typeof this.localStream === 'undefined') {
-      peer = new Peer({
-        initiator: connection.initiator,
-      });
-    } else {
-      peer = new Peer({
-        initiator: connection.initiator,
-        stream: this.localStream,
-      });
-    }
+    const options = this._getPeerOptions(connection.initiator);
+    const peer = new Peer(options);
 
     // If initiator,peer.on'signal' will fire right away, if not it waits for signal
     // https://github.com/feross/simple-peer#peeronsignal-data--
@@ -134,6 +126,26 @@ class SimplePeerClientWrapper {
     this.socket.close();
 
     emitSocketMessage('hangup');
+  }
+
+  _getPeerOptions(initiator) {
+    const options = {
+      initiator: initiator,
+    };
+
+    if (typeof this.localStream !== 'undefined') {
+      options.stream = this.localStream;
+    }
+
+    const spOptions = Object.entries(this.simplePeerOptions);
+
+    if (spOptions.length > 0) {
+      for (const [key, value] of spOptions) {
+        options[key] = value;
+      }
+    }
+
+    return options;
   }
 
   _sendSignal(data, connection) {

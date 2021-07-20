@@ -37,11 +37,9 @@ function setup() {
 }
 
 function gotMedia(stream) {
-  console.log('mysstream');
-  console.log(stream);
   const options = {
     stream: stream,
-    // serverUrl: 'https://simplepeerserver.net',
+    serverUrl: 'https://simplepeerserver.net',
   };
 
   // Create a new simple-peer-wrapper with a webcam stream
