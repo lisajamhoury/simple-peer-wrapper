@@ -1,12 +1,12 @@
 # simple-peer-wrapper
 
-Simple-peer-wrapper provides a [signaling server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling) client for [simple-peer](https://github.com/feross/simple-peer). It is meant to be used with [simple-peer-server](https://github.com/lisajamhoury/simple-peer-server) as the signaling server.
+Simple-peer-wrapper provides a server and peer client for [simple-peer-server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling) and [simple-peer](https://github.com/feross/simple-peer). It is meant to be used with [simple-peer-server](https://github.com/lisajamhoury/simple-peer-server) as the signaling server.
 
 # Why use simple-peer-wrapper
 
 WebRTC peer connections are an excellent tool for building synchronous drawing, dancing, text, or video applications.
 
-[Simple-peer](https://github.com/feross/simple-peer) is an excellent library for creating WebRTC peer connections, however, it does not include a signaling server, which is necessary for establishing the peer connections used by simple-peer.
+[Simple-peer](https://github.com/feross/simple-peer) is an great library for creating WebRTC peer connections, however, it does not include a signaling server, which is responsible for creating the initial connections between peers.
 
 # How simple-peer-wrapper works
 
@@ -18,11 +18,11 @@ Simple-peer-server and simple-peer-wrapper together provide a [signaling server]
 
 They use [Socket.IO](https://socket.io/) to transport the signaling messages, then create the peer connections via [simple-peer](https://github.com/feross/simple-peer).
 
-If you are launching your application on the public internet, you will likely need STUN and TURN servers as well. (About [86% of connections can be created with just STUN servers](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/), but the remaining connections require TURN servers.)
+If you are launching your application on the public internet, you will likely need STUN and TURN servers as well. About [86% of connections can be created with just STUN servers](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/), but the remaining connections require TURN servers.
 
-Default STUN servers are provided by simple-peer. Although they can be overwritten (see documentation on this below). TURN servers can be expensive to maintain and need to be provided by the application developer (that's probably you if you're reading this ;).
+Default STUN servers are provided by simple-peer. Although they can be overwritten (see [documentation](#new-simplepeerwrapperoptions) on this below). TURN servers can be expensive to maintain and need to be provided by the application developer (that's probably you if you're reading this ;).
 
-To learn more about signaling, STUN, and TURN servers, I recommend [this article by Sam Dutton](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/). You may find this article from Gabriel Turner on [How to set up and configure your own TURN server using Coturn](https://gabrieltanner.org/blog/turn-server) helpful. You could also check out paid services like [Twilio's Network Traversal Service](https://www.twilio.com/stun-turn).
+To learn more about signaling, STUN, and TURN servers, I recommend [this article by Sam Dutton](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/). If you are in need of a TURN server, you may find this article on [How to set up and configure your own TURN server using Coturn](https://gabrieltanner.org/blog/turn-server) by Gabriel Turner helpful. You could also check out paid services like [Twilio's Network Traversal Service](https://www.twilio.com/stun-turn).
 
 Once you have your TURN servers setup, see the documentation below for how to include add them to your peer connections.
 
@@ -48,7 +48,7 @@ npm install simple-peer-wrapper
 const SimplePeerWrapper = require('simple-peer-wrapper');
 ```
 
-Option 2: Include the simple-peer-wrapper.min.js as a standalone script in a `<script>` tag. This exports a SimplePeerWrapper constructor on the window.
+Option 2: Include the simple-peer-wrapper.min.js as a standalone script in a `<script>` tag. This exports a SimplePeerWrapper constructor on the window. (Find simple-peer-wrapper.min.js in /dist directory of this repository.)
 
 ```html
 <script src="simple-peer-wrapper.min.js"></script>
@@ -86,7 +86,7 @@ Now that you have a connection, you need to tell your program what you want to d
 // a global variable to hold data
 let partnerMouse;
 
-// when we receive data, call the got data function
+// when we receive data, call the gotData function
 spw.on('data', gotData);
 
 // this runs each time data is received
@@ -137,7 +137,7 @@ You must provide the serverUrl for a successful connection. Other parameters are
 
 The options are as follows:
 
-`serverUrl` the serverUrl of the signaling server you wish to connect to. This is mandatory for a successful connection.
+`serverUrl` the serverUrl of the signaling server you wish to connect to. This is required for a successful connection.
 
 `debug` turns on additional logging. Defaults to false.
 
@@ -171,7 +171,7 @@ simplePeerOptions: {
 
 ## `.connect()`
 
-Creates a peer connection between the user and all other connected parties using simple-peer. Each connection is one-to-one, creating a mesh topology.
+Creates a peer connection between the client and all other parties connected to the signaling server. Each connection is one-to-one, creating a mesh topology.
 
 ## `.isConnectionStarted()`
 
@@ -228,17 +228,16 @@ const options = {
   serverUrl: 'http://localhost:8081',
 };
 
-spw = new SimplePeerWrapper(options);
+const spw = new SimplePeerWrapper(options);
 ```
 
 You will then need to run an http server in this project's folder. If this is new to you, either [http-server](https://www.npmjs.com/package/http-server) or [live-server](https://www.npmjs.com/package/live-server) are good options.
 
 ```bash
-# in your terminal
-
+# in your terminal, navigate into project folder
 cd simple-peer-wrapper
 
-# run the http server of your choice here
+# run the http server of your choice
 live-server
 ```
 
