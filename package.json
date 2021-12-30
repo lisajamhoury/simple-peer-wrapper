@@ -1,6 +1,6 @@
 {
   "name": "simple-peer-wrapper",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A wrapper for simple-peer that includes a socket.io signaling server client. To be used in the browser with simple-peer-server.",
   "repository": "https://github.com/lisajamhoury/simple-peer-wrapper",
   "main": "src/index.js",

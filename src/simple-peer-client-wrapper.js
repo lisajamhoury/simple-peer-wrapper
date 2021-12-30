@@ -124,8 +124,6 @@ class SimplePeerClientWrapper {
 
     this.socket.emit('hangup');
     this.socket.close();
-
-    emitSocketMessage('hangup');
   }
 
   _getPeerOptions(initiator) {
@@ -187,16 +185,11 @@ class SimplePeerClientWrapper {
     }
 
     this.debug && console.log('Closing Connection');
-    //// this._handleRemoteHangup();
-    // closePeerConnection();
-    // emitSocketMessage('bye');
   }
 
   _handleRemoteHangup() {
     this.debug && console.log('Handling remote hangup');
     this.terminateSession(true);
-    // closePeerConnection();
-    // initiator = false;
   }
 
   _closePeerConnection() {
