@@ -163,7 +163,7 @@ class SimplePeerClientWrapper {
 
   _handleConnection() {
     this.debug && console.log('SIMPLE PEER IS CONNECTED');
-    this.onConnectCallback();
+    if (this.onConnectCallback) this.onConnectCallback();
   }
 
   _handleStream(stream) {
