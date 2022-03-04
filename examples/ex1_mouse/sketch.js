@@ -46,12 +46,19 @@ function setup() {
   // Make the peer connection
   spw.connect();
 
+  // Do something when the connection is made
+  spw.on('connect', gotConnect);
+
   // When data recieved over the connection call gotData
   spw.on('data', gotData);
 }
 
 function gotData(data) {
   partnerMousePosition = data.data;
+}
+
+function gotConnect() {
+  console.log('peer connection open');
 }
 
 // Draw() is a p5 function

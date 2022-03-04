@@ -12757,6 +12757,7 @@ class SimplePeerClientWrapper {
     this.localStream;
     this.debug = debug;
     this.connections = [];
+    this.onConnectCallback;
     this.onDataCallback;
     this.onStreamCallback;
     // this.onTrackCallback;
@@ -12809,7 +12810,7 @@ class SimplePeerClientWrapper {
     // If initiator,peer.on'signal' will fire right away, if not it waits for signal
     // https://github.com/feross/simple-peer#peeronsignal-data--
     peer.on('signal', (data) => this._sendSignal(data, connection));
-    peer.on('connect', (data) => this._handleConnection(data));
+    peer.on('connect', () => this._handleConnection());
     peer.on('error', (err) => this._handleError(err));
     peer.on('stream', (stream) => this._handleStream(stream));
     peer.on('data', (data) => this._handleData(data));
@@ -12834,6 +12835,9 @@ class SimplePeerClientWrapper {
 
   setEventCallback(event, callback) {
     switch (event) {
+      case 'connect':
+        this.onConnectCallback = callback;
+        break;
       case 'data':
         this.onDataCallback = callback;
         break;
@@ -12907,8 +12911,9 @@ class SimplePeerClientWrapper {
     this.socket.emit('sending signal', message);
   }
 
-  _handleConnection(data) {
-    console.log('SIMPLE PEER IS CONNECTED');
+  _handleConnection() {
+    this.debug && console.log('SIMPLE PEER IS CONNECTED');
+    this.onConnectCallback();
   }
 
   _handleStream(stream) {

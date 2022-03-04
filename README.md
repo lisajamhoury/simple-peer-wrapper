@@ -181,6 +181,10 @@ Returns `true` or `false`. Denotes whether a peer connection has been establishe
 
 Sends data over the peer's data connection. The sender's ID is sent with the data. This is useful if identifying data arriving from multiple connected peers.
 
+## `.on('connect', () => {})`
+
+Called when the peer connection is created.
+
 ## `.on('data', (data) => {})`
 
 Called when a data message is received from a remote peer via the data channel. `data` is an object containing `data.id`, the unique identifier of the remote peer, and `data.data`, the data sent by the remote peer.
