@@ -1,67 +1,4 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SimplePeerWrapper = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-/*
- * base64-arraybuffer 1.0.1 <https://github.com/niklasvh/base64-arraybuffer>
- * Copyright (c) 2022 Niklas von Hertzen <https://hertzen.com>
- * Released under MIT License
- */
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global['base64-arraybuffer'] = {}));
-}(this, (function (exports) { 'use strict';
-
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    // Use a lookup table to find the index.
-    var lookup = typeof Uint8Array === 'undefined' ? [] : new Uint8Array(256);
-    for (var i = 0; i < chars.length; i++) {
-        lookup[chars.charCodeAt(i)] = i;
-    }
-    var encode = function (arraybuffer) {
-        var bytes = new Uint8Array(arraybuffer), i, len = bytes.length, base64 = '';
-        for (i = 0; i < len; i += 3) {
-            base64 += chars[bytes[i] >> 2];
-            base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
-            base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
-            base64 += chars[bytes[i + 2] & 63];
-        }
-        if (len % 3 === 2) {
-            base64 = base64.substring(0, base64.length - 1) + '=';
-        }
-        else if (len % 3 === 1) {
-            base64 = base64.substring(0, base64.length - 2) + '==';
-        }
-        return base64;
-    };
-    var decode = function (base64) {
-        var bufferLength = base64.length * 0.75, len = base64.length, i, p = 0, encoded1, encoded2, encoded3, encoded4;
-        if (base64[base64.length - 1] === '=') {
-            bufferLength--;
-            if (base64[base64.length - 2] === '=') {
-                bufferLength--;
-            }
-        }
-        var arraybuffer = new ArrayBuffer(bufferLength), bytes = new Uint8Array(arraybuffer);
-        for (i = 0; i < len; i += 4) {
-            encoded1 = lookup[base64.charCodeAt(i)];
-            encoded2 = lookup[base64.charCodeAt(i + 1)];
-            encoded3 = lookup[base64.charCodeAt(i + 2)];
-            encoded4 = lookup[base64.charCodeAt(i + 3)];
-            bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
-            bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
-            bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
-        }
-        return arraybuffer;
-    };
-
-    exports.decode = decode;
-    exports.encode = encode;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
-
-
-},{}],2:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -239,94 +176,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],3:[function(require,module,exports){
-
-/**
- * Expose `Backoff`.
- */
-
-module.exports = Backoff;
-
-/**
- * Initialize backoff timer with `opts`.
- *
- * - `min` initial timeout in milliseconds [100]
- * - `max` max timeout [10000]
- * - `jitter` [0]
- * - `factor` [2]
- *
- * @param {Object} opts
- * @api public
- */
-
-function Backoff(opts) {
-  opts = opts || {};
-  this.ms = opts.min || 100;
-  this.max = opts.max || 10000;
-  this.factor = opts.factor || 2;
-  this.jitter = opts.jitter > 0 && opts.jitter <= 1 ? opts.jitter : 0;
-  this.attempts = 0;
-}
-
-/**
- * Return the backoff duration.
- *
- * @return {Number}
- * @api public
- */
-
-Backoff.prototype.duration = function(){
-  var ms = this.ms * Math.pow(this.factor, this.attempts++);
-  if (this.jitter) {
-    var rand =  Math.random();
-    var deviation = Math.floor(rand * this.jitter * ms);
-    ms = (Math.floor(rand * 10) & 1) == 0  ? ms - deviation : ms + deviation;
-  }
-  return Math.min(ms, this.max) | 0;
-};
-
-/**
- * Reset the number of attempts.
- *
- * @api public
- */
-
-Backoff.prototype.reset = function(){
-  this.attempts = 0;
-};
-
-/**
- * Set the minimum duration
- *
- * @api public
- */
-
-Backoff.prototype.setMin = function(min){
-  this.ms = min;
-};
-
-/**
- * Set the maximum duration
- *
- * @api public
- */
-
-Backoff.prototype.setMax = function(max){
-  this.max = max;
-};
-
-/**
- * Set the jitter
- *
- * @api public
- */
-
-Backoff.prototype.setJitter = function(jitter){
-  this.jitter = jitter;
-};
-
-
-},{}],4:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -478,9 +328,9 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],5:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 
-},{}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -2261,7 +2111,7 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":4,"buffer":6,"ieee754":27}],7:[function(require,module,exports){
+},{"base64-js":2,"buffer":4,"ieee754":28}],5:[function(require,module,exports){
 (function (process){(function (){
 /* eslint-env browser */
 
@@ -2534,7 +2384,7 @@ formatters.j = function (v) {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"./common":8,"_process":32}],8:[function(require,module,exports){
+},{"./common":6,"_process":31}],6:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -2716,7 +2566,7 @@ function setup(env) {
 			namespaces = split[i].replace(/\*/g, '.*?');
 
 			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+				createDebug.skips.push(new RegExp('^' + namespaces.slice(1) + '$'));
 			} else {
 				createDebug.names.push(new RegExp('^' + namespaces + '$'));
 			}
@@ -2810,10 +2660,180 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":29}],9:[function(require,module,exports){
+},{"ms":30}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = (() => {
+exports.hasCORS = void 0;
+// imported from https://github.com/component/has-cors
+let value = false;
+try {
+    value = typeof XMLHttpRequest !== 'undefined' &&
+        'withCredentials' in new XMLHttpRequest();
+}
+catch (err) {
+    // if XMLHttp support is disabled in IE then it will throw
+    // when trying to create
+}
+exports.hasCORS = value;
+
+},{}],8:[function(require,module,exports){
+"use strict";
+// imported from https://github.com/galkn/querystring
+/**
+ * Compiles a querystring
+ * Returns string representation of the object
+ *
+ * @param {Object}
+ * @api private
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.decode = exports.encode = void 0;
+function encode(obj) {
+    let str = '';
+    for (let i in obj) {
+        if (obj.hasOwnProperty(i)) {
+            if (str.length)
+                str += '&';
+            str += encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]);
+        }
+    }
+    return str;
+}
+exports.encode = encode;
+/**
+ * Parses a simple querystring into an object
+ *
+ * @param {String} qs
+ * @api private
+ */
+function decode(qs) {
+    let qry = {};
+    let pairs = qs.split('&');
+    for (let i = 0, l = pairs.length; i < l; i++) {
+        let pair = pairs[i].split('=');
+        qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+    }
+    return qry;
+}
+exports.decode = decode;
+
+},{}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parse = void 0;
+// imported from https://github.com/galkn/parseuri
+/**
+ * Parses an URI
+ *
+ * @author Steven Levithan <stevenlevithan.com> (MIT license)
+ * @api private
+ */
+const re = /^(?:(?![^:@]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+const parts = [
+    'source', 'protocol', 'authority', 'userInfo', 'user', 'password', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'anchor'
+];
+function parse(str) {
+    const src = str, b = str.indexOf('['), e = str.indexOf(']');
+    if (b != -1 && e != -1) {
+        str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ';') + str.substring(e, str.length);
+    }
+    let m = re.exec(str || ''), uri = {}, i = 14;
+    while (i--) {
+        uri[parts[i]] = m[i] || '';
+    }
+    if (b != -1 && e != -1) {
+        uri.source = src;
+        uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ':');
+        uri.authority = uri.authority.replace('[', '').replace(']', '').replace(/;/g, ':');
+        uri.ipv6uri = true;
+    }
+    uri.pathNames = pathNames(uri, uri['path']);
+    uri.queryKey = queryKey(uri, uri['query']);
+    return uri;
+}
+exports.parse = parse;
+function pathNames(obj, path) {
+    const regx = /\/{2,9}/g, names = path.replace(regx, "/").split("/");
+    if (path.substr(0, 1) == '/' || path.length === 0) {
+        names.splice(0, 1);
+    }
+    if (path.substr(path.length - 1, 1) == '/') {
+        names.splice(names.length - 1, 1);
+    }
+    return names;
+}
+function queryKey(uri, query) {
+    const data = {};
+    query.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function ($0, $1, $2) {
+        if ($1) {
+            data[$1] = $2;
+        }
+    });
+    return data;
+}
+
+},{}],10:[function(require,module,exports){
+// imported from https://github.com/unshiftio/yeast
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.yeast = exports.decode = exports.encode = void 0;
+const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split(''), length = 64, map = {};
+let seed = 0, i = 0, prev;
+/**
+ * Return a string representing the specified number.
+ *
+ * @param {Number} num The number to convert.
+ * @returns {String} The string representation of the number.
+ * @api public
+ */
+function encode(num) {
+    let encoded = '';
+    do {
+        encoded = alphabet[num % length] + encoded;
+        num = Math.floor(num / length);
+    } while (num > 0);
+    return encoded;
+}
+exports.encode = encode;
+/**
+ * Return the integer value specified by the given string.
+ *
+ * @param {String} str The string to convert.
+ * @returns {Number} The integer value represented by the string.
+ * @api public
+ */
+function decode(str) {
+    let decoded = 0;
+    for (i = 0; i < str.length; i++) {
+        decoded = decoded * length + map[str.charAt(i)];
+    }
+    return decoded;
+}
+exports.decode = decode;
+/**
+ * Yeast: A tiny growing id generator.
+ *
+ * @returns {String} A unique id.
+ * @api public
+ */
+function yeast() {
+    const now = encode(+new Date());
+    if (now !== prev)
+        return seed = 0, prev = now;
+    return now + '.' + encode(seed++);
+}
+exports.yeast = yeast;
+//
+// Map each character to its index.
+//
+for (; i < length; i++)
+    map[alphabet[i]] = i;
+
+},{}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.globalThisShim = void 0;
+exports.globalThisShim = (() => {
     if (typeof self !== "undefined") {
         return self;
     }
@@ -2825,10 +2845,10 @@ exports.default = (() => {
     }
 })();
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.installTimerFunctions = exports.transports = exports.Transport = exports.protocol = exports.Socket = void 0;
+exports.parse = exports.installTimerFunctions = exports.transports = exports.Transport = exports.protocol = exports.Socket = void 0;
 const socket_js_1 = require("./socket.js");
 Object.defineProperty(exports, "Socket", { enumerable: true, get: function () { return socket_js_1.Socket; } });
 exports.protocol = socket_js_1.Socket.protocol;
@@ -2838,8 +2858,10 @@ var index_js_1 = require("./transports/index.js");
 Object.defineProperty(exports, "transports", { enumerable: true, get: function () { return index_js_1.transports; } });
 var util_js_1 = require("./util.js");
 Object.defineProperty(exports, "installTimerFunctions", { enumerable: true, get: function () { return util_js_1.installTimerFunctions; } });
+var parseuri_js_1 = require("./contrib/parseuri.js");
+Object.defineProperty(exports, "parse", { enumerable: true, get: function () { return parseuri_js_1.parse; } });
 
-},{"./socket.js":11,"./transport.js":12,"./transports/index.js":13,"./util.js":19}],11:[function(require,module,exports){
+},{"./contrib/parseuri.js":9,"./socket.js":13,"./transport.js":14,"./transports/index.js":15,"./util.js":20}],13:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -2848,8 +2870,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Socket = void 0;
 const index_js_1 = require("./transports/index.js");
 const util_js_1 = require("./util.js");
-const parseqs_1 = __importDefault(require("parseqs"));
-const parseuri_1 = __importDefault(require("parseuri"));
+const parseqs_js_1 = require("./contrib/parseqs.js");
+const parseuri_js_1 = require("./contrib/parseuri.js");
 const debug_1 = __importDefault(require("debug")); // debug()
 const component_emitter_1 = require("@socket.io/component-emitter");
 const engine_io_parser_1 = require("engine.io-parser");
@@ -2869,7 +2891,7 @@ class Socket extends component_emitter_1.Emitter {
             uri = null;
         }
         if (uri) {
-            uri = (0, parseuri_1.default)(uri);
+            uri = (0, parseuri_js_1.parse)(uri);
             opts.hostname = uri.host;
             opts.secure = uri.protocol === "https" || uri.protocol === "wss";
             opts.port = uri.port;
@@ -2877,7 +2899,7 @@ class Socket extends component_emitter_1.Emitter {
                 opts.query = uri.query;
         }
         else if (opts.host) {
-            opts.hostname = (0, parseuri_1.default)(opts.host).host;
+            opts.hostname = (0, parseuri_js_1.parse)(opts.host).host;
         }
         (0, util_js_1.installTimerFunctions)(this, opts);
         this.secure =
@@ -2918,7 +2940,7 @@ class Socket extends component_emitter_1.Emitter {
         }, opts);
         this.opts.path = this.opts.path.replace(/\/$/, "") + "/";
         if (typeof this.opts.query === "string") {
-            this.opts.query = parseqs_1.default.decode(this.opts.query);
+            this.opts.query = (0, parseqs_js_1.decode)(this.opts.query);
         }
         // set on handshake
         this.id = null;
@@ -2942,7 +2964,9 @@ class Socket extends component_emitter_1.Emitter {
             }
             if (this.hostname !== "localhost") {
                 this.offlineEventListener = () => {
-                    this.onClose("transport close");
+                    this.onClose("transport close", {
+                        description: "network connection lost"
+                    });
                 };
                 addEventListener("offline", this.offlineEventListener, false);
             }
@@ -2958,7 +2982,7 @@ class Socket extends component_emitter_1.Emitter {
      */
     createTransport(name) {
         debug('creating transport "%s"', name);
-        const query = clone(this.opts.query);
+        const query = Object.assign({}, this.opts.query);
         // append engine.io protocol identifier
         query.EIO = engine_io_parser_1.protocol;
         // transport name
@@ -3030,9 +3054,7 @@ class Socket extends component_emitter_1.Emitter {
             .on("drain", this.onDrain.bind(this))
             .on("packet", this.onPacket.bind(this))
             .on("error", this.onError.bind(this))
-            .on("close", () => {
-            this.onClose("transport close");
-        });
+            .on("close", reason => this.onClose("transport close", reason));
     }
     /**
      * Probes a transport.
@@ -3208,6 +3230,7 @@ class Socket extends component_emitter_1.Emitter {
         this.upgrades = this.filterUpgrades(data.upgrades);
         this.pingInterval = data.pingInterval;
         this.pingTimeout = data.pingTimeout;
+        this.maxPayload = data.maxPayload;
         this.onOpen();
         // In case open handler closes socket
         if ("closed" === this.readyState)
@@ -3256,13 +3279,42 @@ class Socket extends component_emitter_1.Emitter {
             this.transport.writable &&
             !this.upgrading &&
             this.writeBuffer.length) {
-            debug("flushing %d packets in socket", this.writeBuffer.length);
-            this.transport.send(this.writeBuffer);
+            const packets = this.getWritablePackets();
+            debug("flushing %d packets in socket", packets.length);
+            this.transport.send(packets);
             // keep track of current length of writeBuffer
             // splice writeBuffer and callbackBuffer on `drain`
-            this.prevBufferLen = this.writeBuffer.length;
+            this.prevBufferLen = packets.length;
             this.emitReserved("flush");
         }
+    }
+    /**
+     * Ensure the encoded size of the writeBuffer is below the maxPayload value sent by the server (only for HTTP
+     * long-polling)
+     *
+     * @private
+     */
+    getWritablePackets() {
+        const shouldCheckPayloadSize = this.maxPayload &&
+            this.transport.name === "polling" &&
+            this.writeBuffer.length > 1;
+        if (!shouldCheckPayloadSize) {
+            return this.writeBuffer;
+        }
+        let payloadSize = 1; // first packet type
+        for (let i = 0; i < this.writeBuffer.length; i++) {
+            const data = this.writeBuffer[i].data;
+            if (data) {
+                payloadSize += (0, util_js_1.byteLength)(data);
+            }
+            if (i > 0 && payloadSize > this.maxPayload) {
+                debug("only send %d out of %d packets", i, this.writeBuffer.length);
+                return this.writeBuffer.slice(0, i);
+            }
+            payloadSize += 2; // separator + packet type
+        }
+        debug("payload size is %d (max: %d)", payloadSize, this.maxPayload);
+        return this.writeBuffer;
     }
     /**
      * Sends a message.
@@ -3373,7 +3425,7 @@ class Socket extends component_emitter_1.Emitter {
      *
      * @api private
      */
-    onClose(reason, desc) {
+    onClose(reason, description) {
         if ("opening" === this.readyState ||
             "open" === this.readyState ||
             "closing" === this.readyState) {
@@ -3394,7 +3446,7 @@ class Socket extends component_emitter_1.Emitter {
             // clear session id
             this.id = null;
             // emit close event
-            this.emitReserved("close", reason, desc);
+            this.emitReserved("close", reason, description);
             // clean buffers after, so users can still
             // grab the buffers on `close` event
             this.writeBuffer = [];
@@ -3421,17 +3473,8 @@ class Socket extends component_emitter_1.Emitter {
 }
 exports.Socket = Socket;
 Socket.protocol = engine_io_parser_1.protocol;
-function clone(obj) {
-    const o = {};
-    for (let i in obj) {
-        if (obj.hasOwnProperty(i)) {
-            o[i] = obj[i];
-        }
-    }
-    return o;
-}
 
-},{"./transports/index.js":13,"./util.js":19,"@socket.io/component-emitter":2,"debug":7,"engine.io-parser":23,"parseqs":30,"parseuri":31}],12:[function(require,module,exports){
+},{"./contrib/parseqs.js":8,"./contrib/parseuri.js":9,"./transports/index.js":15,"./util.js":20,"@socket.io/component-emitter":1,"debug":5,"engine.io-parser":25}],14:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -3443,6 +3486,14 @@ const component_emitter_1 = require("@socket.io/component-emitter");
 const util_js_1 = require("./util.js");
 const debug_1 = __importDefault(require("debug")); // debug()
 const debug = (0, debug_1.default)("engine.io-client:transport"); // debug()
+class TransportError extends Error {
+    constructor(reason, description, context) {
+        super(reason);
+        this.description = description;
+        this.context = context;
+        this.type = "TransportError";
+    }
+}
 class Transport extends component_emitter_1.Emitter {
     /**
      * Transport abstract constructor.
@@ -3462,17 +3513,14 @@ class Transport extends component_emitter_1.Emitter {
     /**
      * Emits an error.
      *
-     * @param {String} str
+     * @param {String} reason
+     * @param description
+     * @param context - the error context
      * @return {Transport} for chaining
      * @api protected
      */
-    onError(msg, desc) {
-        const err = new Error(msg);
-        // @ts-ignore
-        err.type = "TransportError";
-        // @ts-ignore
-        err.description = desc;
-        super.emit("error", err);
+    onError(reason, description, context) {
+        super.emitReserved("error", new TransportError(reason, description, context));
         return this;
     }
     /**
@@ -3522,7 +3570,7 @@ class Transport extends component_emitter_1.Emitter {
     onOpen() {
         this.readyState = "open";
         this.writable = true;
-        super.emit("open");
+        super.emitReserved("open");
     }
     /**
      * Called with data.
@@ -3540,57 +3588,56 @@ class Transport extends component_emitter_1.Emitter {
      * @api protected
      */
     onPacket(packet) {
-        super.emit("packet", packet);
+        super.emitReserved("packet", packet);
     }
     /**
      * Called upon close.
      *
      * @api protected
      */
-    onClose() {
+    onClose(details) {
         this.readyState = "closed";
-        super.emit("close");
+        super.emitReserved("close", details);
     }
 }
 exports.Transport = Transport;
 
-},{"./util.js":19,"@socket.io/component-emitter":2,"debug":7,"engine.io-parser":23}],13:[function(require,module,exports){
+},{"./util.js":20,"@socket.io/component-emitter":1,"debug":5,"engine.io-parser":25}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.transports = void 0;
-const polling_xhr_js_1 = require("./polling-xhr.js");
+const polling_js_1 = require("./polling.js");
 const websocket_js_1 = require("./websocket.js");
 exports.transports = {
     websocket: websocket_js_1.WS,
-    polling: polling_xhr_js_1.XHR
+    polling: polling_js_1.Polling
 };
 
-},{"./polling-xhr.js":14,"./websocket.js":17}],14:[function(require,module,exports){
+},{"./polling.js":16,"./websocket.js":18}],16:[function(require,module,exports){
 "use strict";
-/* global attachEvent */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Request = exports.XHR = void 0;
-const xmlhttprequest_js_1 = __importDefault(require("./xmlhttprequest.js"));
+exports.Request = exports.Polling = void 0;
+const transport_js_1 = require("../transport.js");
 const debug_1 = __importDefault(require("debug")); // debug()
-const globalThis_js_1 = __importDefault(require("../globalThis.js"));
-const util_js_1 = require("../util.js");
+const yeast_js_1 = require("../contrib/yeast.js");
+const parseqs_js_1 = require("../contrib/parseqs.js");
+const engine_io_parser_1 = require("engine.io-parser");
+const xmlhttprequest_js_1 = require("./xmlhttprequest.js");
 const component_emitter_1 = require("@socket.io/component-emitter");
-const polling_js_1 = require("./polling.js");
-const debug = (0, debug_1.default)("engine.io-client:polling-xhr"); // debug()
-/**
- * Empty function
- */
+const util_js_1 = require("../util.js");
+const globalThis_js_1 = require("../globalThis.js");
+const debug = (0, debug_1.default)("engine.io-client:polling"); // debug()
 function empty() { }
 const hasXHR2 = (function () {
-    const xhr = new xmlhttprequest_js_1.default({
+    const xhr = new xmlhttprequest_js_1.XHR({
         xdomain: false
     });
     return null != xhr.responseType;
 })();
-class XHR extends polling_js_1.Polling {
+class Polling extends transport_js_1.Transport {
     /**
      * XHR Polling constructor.
      *
@@ -3599,6 +3646,7 @@ class XHR extends polling_js_1.Polling {
      */
     constructor(opts) {
         super(opts);
+        this.polling = false;
         if (typeof location !== "undefined") {
             const isSSL = "https:" === location.protocol;
             let port = location.port;
@@ -3617,6 +3665,171 @@ class XHR extends polling_js_1.Polling {
          */
         const forceBase64 = opts && opts.forceBase64;
         this.supportsBinary = hasXHR2 && !forceBase64;
+    }
+    /**
+     * Transport name.
+     */
+    get name() {
+        return "polling";
+    }
+    /**
+     * Opens the socket (triggers polling). We write a PING message to determine
+     * when the transport is open.
+     *
+     * @api private
+     */
+    doOpen() {
+        this.poll();
+    }
+    /**
+     * Pauses polling.
+     *
+     * @param {Function} callback upon buffers are flushed and transport is paused
+     * @api private
+     */
+    pause(onPause) {
+        this.readyState = "pausing";
+        const pause = () => {
+            debug("paused");
+            this.readyState = "paused";
+            onPause();
+        };
+        if (this.polling || !this.writable) {
+            let total = 0;
+            if (this.polling) {
+                debug("we are currently polling - waiting to pause");
+                total++;
+                this.once("pollComplete", function () {
+                    debug("pre-pause polling complete");
+                    --total || pause();
+                });
+            }
+            if (!this.writable) {
+                debug("we are currently writing - waiting to pause");
+                total++;
+                this.once("drain", function () {
+                    debug("pre-pause writing complete");
+                    --total || pause();
+                });
+            }
+        }
+        else {
+            pause();
+        }
+    }
+    /**
+     * Starts polling cycle.
+     *
+     * @api public
+     */
+    poll() {
+        debug("polling");
+        this.polling = true;
+        this.doPoll();
+        this.emitReserved("poll");
+    }
+    /**
+     * Overloads onData to detect payloads.
+     *
+     * @api private
+     */
+    onData(data) {
+        debug("polling got data %s", data);
+        const callback = packet => {
+            // if its the first message we consider the transport open
+            if ("opening" === this.readyState && packet.type === "open") {
+                this.onOpen();
+            }
+            // if its a close packet, we close the ongoing requests
+            if ("close" === packet.type) {
+                this.onClose({ description: "transport closed by the server" });
+                return false;
+            }
+            // otherwise bypass onData and handle the message
+            this.onPacket(packet);
+        };
+        // decode payload
+        (0, engine_io_parser_1.decodePayload)(data, this.socket.binaryType).forEach(callback);
+        // if an event did not trigger closing
+        if ("closed" !== this.readyState) {
+            // if we got data we're not polling
+            this.polling = false;
+            this.emitReserved("pollComplete");
+            if ("open" === this.readyState) {
+                this.poll();
+            }
+            else {
+                debug('ignoring poll - transport state "%s"', this.readyState);
+            }
+        }
+    }
+    /**
+     * For polling, send a close packet.
+     *
+     * @api private
+     */
+    doClose() {
+        const close = () => {
+            debug("writing close packet");
+            this.write([{ type: "close" }]);
+        };
+        if ("open" === this.readyState) {
+            debug("transport open - closing");
+            close();
+        }
+        else {
+            // in case we're trying to close while
+            // handshaking is in progress (GH-164)
+            debug("transport not open - deferring close");
+            this.once("open", close);
+        }
+    }
+    /**
+     * Writes a packets payload.
+     *
+     * @param {Array} data packets
+     * @param {Function} drain callback
+     * @api private
+     */
+    write(packets) {
+        this.writable = false;
+        (0, engine_io_parser_1.encodePayload)(packets, data => {
+            this.doWrite(data, () => {
+                this.writable = true;
+                this.emitReserved("drain");
+            });
+        });
+    }
+    /**
+     * Generates uri for connection.
+     *
+     * @api private
+     */
+    uri() {
+        let query = this.query || {};
+        const schema = this.opts.secure ? "https" : "http";
+        let port = "";
+        // cache busting is forced
+        if (false !== this.opts.timestampRequests) {
+            query[this.opts.timestampParam] = (0, yeast_js_1.yeast)();
+        }
+        if (!this.supportsBinary && !query.sid) {
+            query.b64 = 1;
+        }
+        // avoid port if default for schema
+        if (this.opts.port &&
+            (("https" === schema && Number(this.opts.port) !== 443) ||
+                ("http" === schema && Number(this.opts.port) !== 80))) {
+            port = ":" + this.opts.port;
+        }
+        const encodedQuery = (0, parseqs_js_1.encode)(query);
+        const ipv6 = this.opts.hostname.indexOf(":") !== -1;
+        return (schema +
+            "://" +
+            (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) +
+            port +
+            this.opts.path +
+            (encodedQuery.length ? "?" + encodedQuery : ""));
     }
     /**
      * Creates a request.
@@ -3641,8 +3854,8 @@ class XHR extends polling_js_1.Polling {
             data: data
         });
         req.on("success", fn);
-        req.on("error", err => {
-            this.onError("xhr post error", err);
+        req.on("error", (xhrStatus, context) => {
+            this.onError("xhr post error", xhrStatus, context);
         });
     }
     /**
@@ -3654,13 +3867,13 @@ class XHR extends polling_js_1.Polling {
         debug("xhr poll");
         const req = this.request();
         req.on("data", this.onData.bind(this));
-        req.on("error", err => {
-            this.onError("xhr poll error", err);
+        req.on("error", (xhrStatus, context) => {
+            this.onError("xhr poll error", xhrStatus, context);
         });
         this.pollXhr = req;
     }
 }
-exports.XHR = XHR;
+exports.Polling = Polling;
 class Request extends component_emitter_1.Emitter {
     /**
      * Request constructor
@@ -3687,7 +3900,7 @@ class Request extends component_emitter_1.Emitter {
         const opts = (0, util_js_1.pick)(this.opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
         opts.xdomain = !!this.opts.xd;
         opts.xscheme = !!this.opts.xs;
-        const xhr = (this.xhr = new xmlhttprequest_js_1.default(opts));
+        const xhr = (this.xhr = new xmlhttprequest_js_1.XHR(opts));
         try {
             debug("xhr open %s: %s", this.method, this.uri);
             xhr.open(this.method, this.uri, this.async);
@@ -3751,30 +3964,12 @@ class Request extends component_emitter_1.Emitter {
         }
     }
     /**
-     * Called upon successful response.
-     *
-     * @api private
-     */
-    onSuccess() {
-        this.emit("success");
-        this.cleanup();
-    }
-    /**
-     * Called if we have data.
-     *
-     * @api private
-     */
-    onData(data) {
-        this.emit("data", data);
-        this.onSuccess();
-    }
-    /**
      * Called upon error.
      *
      * @api private
      */
     onError(err) {
-        this.emit("error", err);
+        this.emitReserved("error", err, this.xhr);
         this.cleanup(true);
     }
     /**
@@ -3806,7 +4001,9 @@ class Request extends component_emitter_1.Emitter {
     onLoad() {
         const data = this.xhr.responseText;
         if (data !== null) {
-            this.onData(data);
+            this.emitReserved("data", data);
+            this.emitReserved("success");
+            this.cleanup();
         }
     }
     /**
@@ -3833,7 +4030,7 @@ if (typeof document !== "undefined") {
         attachEvent("onunload", unloadHandler);
     }
     else if (typeof addEventListener === "function") {
-        const terminationEvent = "onpagehide" in globalThis_js_1.default ? "pagehide" : "unload";
+        const terminationEvent = "onpagehide" in globalThis_js_1.globalThisShim ? "pagehide" : "unload";
         addEventListener(terminationEvent, unloadHandler, false);
     }
 }
@@ -3845,200 +4042,11 @@ function unloadHandler() {
     }
 }
 
-},{"../globalThis.js":9,"../util.js":19,"./polling.js":15,"./xmlhttprequest.js":18,"@socket.io/component-emitter":2,"debug":7}],15:[function(require,module,exports){
+},{"../contrib/parseqs.js":8,"../contrib/yeast.js":10,"../globalThis.js":11,"../transport.js":14,"../util.js":20,"./xmlhttprequest.js":19,"@socket.io/component-emitter":1,"debug":5,"engine.io-parser":25}],17:[function(require,module,exports){
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Polling = void 0;
-const transport_js_1 = require("../transport.js");
-const debug_1 = __importDefault(require("debug")); // debug()
-const yeast_1 = __importDefault(require("yeast"));
-const parseqs_1 = __importDefault(require("parseqs"));
-const engine_io_parser_1 = require("engine.io-parser");
-const debug = (0, debug_1.default)("engine.io-client:polling"); // debug()
-class Polling extends transport_js_1.Transport {
-    constructor() {
-        super(...arguments);
-        this.polling = false;
-    }
-    /**
-     * Transport name.
-     */
-    get name() {
-        return "polling";
-    }
-    /**
-     * Opens the socket (triggers polling). We write a PING message to determine
-     * when the transport is open.
-     *
-     * @api private
-     */
-    doOpen() {
-        this.poll();
-    }
-    /**
-     * Pauses polling.
-     *
-     * @param {Function} callback upon buffers are flushed and transport is paused
-     * @api private
-     */
-    pause(onPause) {
-        this.readyState = "pausing";
-        const pause = () => {
-            debug("paused");
-            this.readyState = "paused";
-            onPause();
-        };
-        if (this.polling || !this.writable) {
-            let total = 0;
-            if (this.polling) {
-                debug("we are currently polling - waiting to pause");
-                total++;
-                this.once("pollComplete", function () {
-                    debug("pre-pause polling complete");
-                    --total || pause();
-                });
-            }
-            if (!this.writable) {
-                debug("we are currently writing - waiting to pause");
-                total++;
-                this.once("drain", function () {
-                    debug("pre-pause writing complete");
-                    --total || pause();
-                });
-            }
-        }
-        else {
-            pause();
-        }
-    }
-    /**
-     * Starts polling cycle.
-     *
-     * @api public
-     */
-    poll() {
-        debug("polling");
-        this.polling = true;
-        this.doPoll();
-        this.emit("poll");
-    }
-    /**
-     * Overloads onData to detect payloads.
-     *
-     * @api private
-     */
-    onData(data) {
-        debug("polling got data %s", data);
-        const callback = packet => {
-            // if its the first message we consider the transport open
-            if ("opening" === this.readyState && packet.type === "open") {
-                this.onOpen();
-            }
-            // if its a close packet, we close the ongoing requests
-            if ("close" === packet.type) {
-                this.onClose();
-                return false;
-            }
-            // otherwise bypass onData and handle the message
-            this.onPacket(packet);
-        };
-        // decode payload
-        (0, engine_io_parser_1.decodePayload)(data, this.socket.binaryType).forEach(callback);
-        // if an event did not trigger closing
-        if ("closed" !== this.readyState) {
-            // if we got data we're not polling
-            this.polling = false;
-            this.emit("pollComplete");
-            if ("open" === this.readyState) {
-                this.poll();
-            }
-            else {
-                debug('ignoring poll - transport state "%s"', this.readyState);
-            }
-        }
-    }
-    /**
-     * For polling, send a close packet.
-     *
-     * @api private
-     */
-    doClose() {
-        const close = () => {
-            debug("writing close packet");
-            this.write([{ type: "close" }]);
-        };
-        if ("open" === this.readyState) {
-            debug("transport open - closing");
-            close();
-        }
-        else {
-            // in case we're trying to close while
-            // handshaking is in progress (GH-164)
-            debug("transport not open - deferring close");
-            this.once("open", close);
-        }
-    }
-    /**
-     * Writes a packets payload.
-     *
-     * @param {Array} data packets
-     * @param {Function} drain callback
-     * @api private
-     */
-    write(packets) {
-        this.writable = false;
-        (0, engine_io_parser_1.encodePayload)(packets, data => {
-            this.doWrite(data, () => {
-                this.writable = true;
-                this.emit("drain");
-            });
-        });
-    }
-    /**
-     * Generates uri for connection.
-     *
-     * @api private
-     */
-    uri() {
-        let query = this.query || {};
-        const schema = this.opts.secure ? "https" : "http";
-        let port = "";
-        // cache busting is forced
-        if (false !== this.opts.timestampRequests) {
-            query[this.opts.timestampParam] = (0, yeast_1.default)();
-        }
-        if (!this.supportsBinary && !query.sid) {
-            query.b64 = 1;
-        }
-        // avoid port if default for schema
-        if (this.opts.port &&
-            (("https" === schema && Number(this.opts.port) !== 443) ||
-                ("http" === schema && Number(this.opts.port) !== 80))) {
-            port = ":" + this.opts.port;
-        }
-        const encodedQuery = parseqs_1.default.encode(query);
-        const ipv6 = this.opts.hostname.indexOf(":") !== -1;
-        return (schema +
-            "://" +
-            (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) +
-            port +
-            this.opts.path +
-            (encodedQuery.length ? "?" + encodedQuery : ""));
-    }
-}
-exports.Polling = Polling;
-
-},{"../transport.js":12,"debug":7,"engine.io-parser":23,"parseqs":30,"yeast":63}],16:[function(require,module,exports){
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultBinaryType = exports.usingBrowserWebSocket = exports.WebSocket = exports.nextTick = void 0;
-const globalThis_js_1 = __importDefault(require("../globalThis.js"));
+const globalThis_js_1 = require("../globalThis.js");
 exports.nextTick = (() => {
     const isPromiseAvailable = typeof Promise === "function" && typeof Promise.resolve === "function";
     if (isPromiseAvailable) {
@@ -4048,11 +4056,11 @@ exports.nextTick = (() => {
         return (cb, setTimeoutFn) => setTimeoutFn(cb, 0);
     }
 })();
-exports.WebSocket = globalThis_js_1.default.WebSocket || globalThis_js_1.default.MozWebSocket;
+exports.WebSocket = globalThis_js_1.globalThisShim.WebSocket || globalThis_js_1.globalThisShim.MozWebSocket;
 exports.usingBrowserWebSocket = true;
 exports.defaultBinaryType = "arraybuffer";
 
-},{"../globalThis.js":9}],17:[function(require,module,exports){
+},{"../globalThis.js":11}],18:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
@@ -4061,8 +4069,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WS = void 0;
 const transport_js_1 = require("../transport.js");
-const parseqs_1 = __importDefault(require("parseqs"));
-const yeast_1 = __importDefault(require("yeast"));
+const parseqs_js_1 = require("../contrib/parseqs.js");
+const yeast_js_1 = require("../contrib/yeast.js");
 const util_js_1 = require("../util.js");
 const websocket_constructor_js_1 = require("./websocket-constructor.js");
 const debug_1 = __importDefault(require("debug")); // debug()
@@ -4119,7 +4127,7 @@ class WS extends transport_js_1.Transport {
                     : new websocket_constructor_js_1.WebSocket(uri, protocols, opts);
         }
         catch (err) {
-            return this.emit("error", err);
+            return this.emitReserved("error", err);
         }
         this.ws.binaryType = this.socket.binaryType || websocket_constructor_js_1.defaultBinaryType;
         this.addEventListeners();
@@ -4136,7 +4144,10 @@ class WS extends transport_js_1.Transport {
             }
             this.onOpen();
         };
-        this.ws.onclose = this.onClose.bind(this);
+        this.ws.onclose = closeEvent => this.onClose({
+            description: "websocket connection closed",
+            context: closeEvent
+        });
         this.ws.onmessage = ev => this.onData(ev.data);
         this.ws.onerror = e => this.onError("websocket error", e);
     }
@@ -4161,7 +4172,9 @@ class WS extends transport_js_1.Transport {
                         opts.compress = packet.options.compress;
                     }
                     if (this.opts.perMessageDeflate) {
-                        const len = "string" === typeof data ? Buffer.byteLength(data) : data.length;
+                        const len = 
+                        // @ts-ignore
+                        "string" === typeof data ? Buffer.byteLength(data) : data.length;
                         if (len < this.opts.perMessageDeflate.threshold) {
                             opts.compress = false;
                         }
@@ -4187,7 +4200,7 @@ class WS extends transport_js_1.Transport {
                     // defer to next tick to allow Socket to clear writeBuffer
                     (0, websocket_constructor_js_1.nextTick)(() => {
                         this.writable = true;
-                        this.emit("drain");
+                        this.emitReserved("drain");
                     }, this.setTimeoutFn);
                 }
             });
@@ -4221,13 +4234,13 @@ class WS extends transport_js_1.Transport {
         }
         // append timestamp to URI
         if (this.opts.timestampRequests) {
-            query[this.opts.timestampParam] = (0, yeast_1.default)();
+            query[this.opts.timestampParam] = (0, yeast_js_1.yeast)();
         }
         // communicate binary support capabilities
         if (!this.supportsBinary) {
             query.b64 = 1;
         }
-        const encodedQuery = parseqs_1.default.encode(query);
+        const encodedQuery = (0, parseqs_js_1.encode)(query);
         const ipv6 = this.opts.hostname.indexOf(":") !== -1;
         return (schema +
             "://" +
@@ -4243,48 +4256,42 @@ class WS extends transport_js_1.Transport {
      * @api public
      */
     check() {
-        return (!!websocket_constructor_js_1.WebSocket &&
-            !("__initialize" in websocket_constructor_js_1.WebSocket && this.name === WS.prototype.name));
+        return !!websocket_constructor_js_1.WebSocket;
     }
 }
 exports.WS = WS;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../transport.js":12,"../util.js":19,"./websocket-constructor.js":16,"buffer":6,"debug":7,"engine.io-parser":23,"parseqs":30,"yeast":63}],18:[function(require,module,exports){
+},{"../contrib/parseqs.js":8,"../contrib/yeast.js":10,"../transport.js":14,"../util.js":20,"./websocket-constructor.js":17,"buffer":4,"debug":5,"engine.io-parser":25}],19:[function(require,module,exports){
 "use strict";
 // browser shim for xmlhttprequest module
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const has_cors_1 = __importDefault(require("has-cors"));
-const globalThis_js_1 = __importDefault(require("../globalThis.js"));
-function default_1(opts) {
+exports.XHR = void 0;
+const has_cors_js_1 = require("../contrib/has-cors.js");
+const globalThis_js_1 = require("../globalThis.js");
+function XHR(opts) {
     const xdomain = opts.xdomain;
     // XMLHttpRequest can be disabled on IE
     try {
-        if ("undefined" !== typeof XMLHttpRequest && (!xdomain || has_cors_1.default)) {
+        if ("undefined" !== typeof XMLHttpRequest && (!xdomain || has_cors_js_1.hasCORS)) {
             return new XMLHttpRequest();
         }
     }
     catch (e) { }
     if (!xdomain) {
         try {
-            return new globalThis_js_1.default[["Active"].concat("Object").join("X")]("Microsoft.XMLHTTP");
+            return new globalThis_js_1.globalThisShim[["Active"].concat("Object").join("X")]("Microsoft.XMLHTTP");
         }
         catch (e) { }
     }
 }
-exports.default = default_1;
+exports.XHR = XHR;
 
-},{"../globalThis.js":9,"has-cors":26}],19:[function(require,module,exports){
+},{"../contrib/has-cors.js":7,"../globalThis.js":11}],20:[function(require,module,exports){
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.installTimerFunctions = exports.pick = void 0;
-const globalThis_js_1 = __importDefault(require("./globalThis.js"));
+exports.byteLength = exports.installTimerFunctions = exports.pick = void 0;
+const globalThis_js_1 = require("./globalThis.js");
 function pick(obj, ...attr) {
     return attr.reduce((acc, k) => {
         if (obj.hasOwnProperty(k)) {
@@ -4299,17 +4306,48 @@ const NATIVE_SET_TIMEOUT = setTimeout;
 const NATIVE_CLEAR_TIMEOUT = clearTimeout;
 function installTimerFunctions(obj, opts) {
     if (opts.useNativeTimers) {
-        obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globalThis_js_1.default);
-        obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globalThis_js_1.default);
+        obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globalThis_js_1.globalThisShim);
+        obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globalThis_js_1.globalThisShim);
     }
     else {
-        obj.setTimeoutFn = setTimeout.bind(globalThis_js_1.default);
-        obj.clearTimeoutFn = clearTimeout.bind(globalThis_js_1.default);
+        obj.setTimeoutFn = setTimeout.bind(globalThis_js_1.globalThisShim);
+        obj.clearTimeoutFn = clearTimeout.bind(globalThis_js_1.globalThisShim);
     }
 }
 exports.installTimerFunctions = installTimerFunctions;
+// base64 encoded buffers are about 33% bigger (https://en.wikipedia.org/wiki/Base64)
+const BASE64_OVERHEAD = 1.33;
+// we could also have used `new Blob([obj]).size`, but it isn't supported in IE9
+function byteLength(obj) {
+    if (typeof obj === "string") {
+        return utf8Length(obj);
+    }
+    // arraybuffer or blob
+    return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
+}
+exports.byteLength = byteLength;
+function utf8Length(str) {
+    let c = 0, length = 0;
+    for (let i = 0, l = str.length; i < l; i++) {
+        c = str.charCodeAt(i);
+        if (c < 0x80) {
+            length += 1;
+        }
+        else if (c < 0x800) {
+            length += 2;
+        }
+        else if (c < 0xd800 || c >= 0xe000) {
+            length += 3;
+        }
+        else {
+            i++;
+            length += 4;
+        }
+    }
+    return length;
+}
 
-},{"./globalThis.js":9}],20:[function(require,module,exports){
+},{"./globalThis.js":11}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ERROR_PACKET = exports.PACKET_TYPES_REVERSE = exports.PACKET_TYPES = void 0;
@@ -4330,11 +4368,60 @@ Object.keys(PACKET_TYPES).forEach(key => {
 const ERROR_PACKET = { type: "error", data: "parser error" };
 exports.ERROR_PACKET = ERROR_PACKET;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.decode = exports.encode = void 0;
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+// Use a lookup table to find the index.
+const lookup = typeof Uint8Array === 'undefined' ? [] : new Uint8Array(256);
+for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+}
+const encode = (arraybuffer) => {
+    let bytes = new Uint8Array(arraybuffer), i, len = bytes.length, base64 = '';
+    for (i = 0; i < len; i += 3) {
+        base64 += chars[bytes[i] >> 2];
+        base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+        base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+        base64 += chars[bytes[i + 2] & 63];
+    }
+    if (len % 3 === 2) {
+        base64 = base64.substring(0, base64.length - 1) + '=';
+    }
+    else if (len % 3 === 1) {
+        base64 = base64.substring(0, base64.length - 2) + '==';
+    }
+    return base64;
+};
+exports.encode = encode;
+const decode = (base64) => {
+    let bufferLength = base64.length * 0.75, len = base64.length, i, p = 0, encoded1, encoded2, encoded3, encoded4;
+    if (base64[base64.length - 1] === '=') {
+        bufferLength--;
+        if (base64[base64.length - 2] === '=') {
+            bufferLength--;
+        }
+    }
+    const arraybuffer = new ArrayBuffer(bufferLength), bytes = new Uint8Array(arraybuffer);
+    for (i = 0; i < len; i += 4) {
+        encoded1 = lookup[base64.charCodeAt(i)];
+        encoded2 = lookup[base64.charCodeAt(i + 1)];
+        encoded3 = lookup[base64.charCodeAt(i + 2)];
+        encoded4 = lookup[base64.charCodeAt(i + 3)];
+        bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+        bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+        bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+    return arraybuffer;
+};
+exports.decode = decode;
+
+},{}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const commons_js_1 = require("./commons.js");
-const base64_arraybuffer_1 = require("@socket.io/base64-arraybuffer");
+const base64_arraybuffer_js_1 = require("./contrib/base64-arraybuffer.js");
 const withNativeArrayBuffer = typeof ArrayBuffer === "function";
 const decodePacket = (encodedPacket, binaryType) => {
     if (typeof encodedPacket !== "string") {
@@ -4365,7 +4452,7 @@ const decodePacket = (encodedPacket, binaryType) => {
 };
 const decodeBase64Packet = (data, binaryType) => {
     if (withNativeArrayBuffer) {
-        const decoded = (0, base64_arraybuffer_1.decode)(data);
+        const decoded = (0, base64_arraybuffer_js_1.decode)(data);
         return mapBinary(decoded, binaryType);
     }
     else {
@@ -4383,7 +4470,7 @@ const mapBinary = (data, binaryType) => {
 };
 exports.default = decodePacket;
 
-},{"./commons.js":20,"@socket.io/base64-arraybuffer":1}],22:[function(require,module,exports){
+},{"./commons.js":21,"./contrib/base64-arraybuffer.js":22}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const commons_js_1 = require("./commons.js");
@@ -4428,7 +4515,7 @@ const encodeBlobAsBase64 = (data, callback) => {
 };
 exports.default = encodePacket;
 
-},{"./commons.js":20}],23:[function(require,module,exports){
+},{"./commons.js":21}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.decodePayload = exports.decodePacket = exports.encodePayload = exports.encodePacket = exports.protocol = void 0;
@@ -4468,7 +4555,7 @@ const decodePayload = (encodedPayload, binaryType) => {
 exports.decodePayload = decodePayload;
 exports.protocol = 4;
 
-},{"./decodePacket.js":21,"./encodePacket.js":22}],24:[function(require,module,exports){
+},{"./decodePacket.js":23,"./encodePacket.js":24}],26:[function(require,module,exports){
 'use strict';
 
 /**
@@ -4539,7 +4626,7 @@ function createError(err, code, props) {
 
 module.exports = createError;
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -4556,26 +4643,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],26:[function(require,module,exports){
-
-/**
- * Module exports.
- *
- * Logic borrowed from Modernizr:
- *
- *   - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cors.js
- */
-
-try {
-  module.exports = typeof XMLHttpRequest !== 'undefined' &&
-    'withCredentials' in new XMLHttpRequest();
-} catch (err) {
-  // if XMLHttp support is disabled in IE then it will throw
-  // when trying to create
-  module.exports = false;
-}
-
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -4662,7 +4730,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -4691,7 +4759,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -4855,116 +4923,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],30:[function(require,module,exports){
-/**
- * Compiles a querystring
- * Returns string representation of the object
- *
- * @param {Object}
- * @api private
- */
-
-exports.encode = function (obj) {
-  var str = '';
-
-  for (var i in obj) {
-    if (obj.hasOwnProperty(i)) {
-      if (str.length) str += '&';
-      str += encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]);
-    }
-  }
-
-  return str;
-};
-
-/**
- * Parses a simple querystring into an object
- *
- * @param {String} qs
- * @api private
- */
-
-exports.decode = function(qs){
-  var qry = {};
-  var pairs = qs.split('&');
-  for (var i = 0, l = pairs.length; i < l; i++) {
-    var pair = pairs[i].split('=');
-    qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
-  }
-  return qry;
-};
-
 },{}],31:[function(require,module,exports){
-/**
- * Parses an URI
- *
- * @author Steven Levithan <stevenlevithan.com> (MIT license)
- * @api private
- */
-
-var re = /^(?:(?![^:@]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
-
-var parts = [
-    'source', 'protocol', 'authority', 'userInfo', 'user', 'password', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'anchor'
-];
-
-module.exports = function parseuri(str) {
-    var src = str,
-        b = str.indexOf('['),
-        e = str.indexOf(']');
-
-    if (b != -1 && e != -1) {
-        str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ';') + str.substring(e, str.length);
-    }
-
-    var m = re.exec(str || ''),
-        uri = {},
-        i = 14;
-
-    while (i--) {
-        uri[parts[i]] = m[i] || '';
-    }
-
-    if (b != -1 && e != -1) {
-        uri.source = src;
-        uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ':');
-        uri.authority = uri.authority.replace('[', '').replace(']', '').replace(/;/g, ':');
-        uri.ipv6uri = true;
-    }
-
-    uri.pathNames = pathNames(uri, uri['path']);
-    uri.queryKey = queryKey(uri, uri['query']);
-
-    return uri;
-};
-
-function pathNames(obj, path) {
-    var regx = /\/{2,9}/g,
-        names = path.replace(regx, "/").split("/");
-
-    if (path.substr(0, 1) == '/' || path.length === 0) {
-        names.splice(0, 1);
-    }
-    if (path.substr(path.length - 1, 1) == '/') {
-        names.splice(names.length - 1, 1);
-    }
-
-    return names;
-}
-
-function queryKey(uri, query) {
-    var data = {};
-
-    query.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function ($0, $1, $2) {
-        if ($1) {
-            data[$1] = $2;
-        }
-    });
-
-    return data;
-}
-
-},{}],32:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -5150,7 +5109,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],33:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){(function (){
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 let promise
@@ -5163,7 +5122,7 @@ module.exports = typeof queueMicrotask === 'function'
     .catch(err => setTimeout(() => { throw err }, 0))
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (process,global){(function (){
 'use strict'
 
@@ -5217,7 +5176,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":32,"safe-buffer":35}],35:[function(require,module,exports){
+},{"_process":31,"safe-buffer":34}],34:[function(require,module,exports){
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
@@ -5284,7 +5243,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":6}],36:[function(require,module,exports){
+},{"buffer":4}],35:[function(require,module,exports){
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 const debug = require('debug')('simple-peer')
 const getBrowserRTC = require('get-browser-rtc')
@@ -6338,7 +6297,7 @@ Peer.channelConfig = {}
 
 module.exports = Peer
 
-},{"buffer":6,"debug":7,"err-code":24,"get-browser-rtc":25,"queue-microtask":33,"randombytes":34,"readable-stream":51}],37:[function(require,module,exports){
+},{"buffer":4,"debug":5,"err-code":26,"get-browser-rtc":27,"queue-microtask":32,"randombytes":33,"readable-stream":50}],36:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -6467,7 +6426,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (process){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -6609,7 +6568,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this)}).call(this,require('_process'))
-},{"./_stream_readable":40,"./_stream_writable":42,"_process":32,"inherits":28}],39:[function(require,module,exports){
+},{"./_stream_readable":39,"./_stream_writable":41,"_process":31,"inherits":29}],38:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6649,7 +6608,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":41,"inherits":28}],40:[function(require,module,exports){
+},{"./_stream_transform":40,"inherits":29}],39:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -7776,7 +7735,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":37,"./_stream_duplex":38,"./internal/streams/async_iterator":43,"./internal/streams/buffer_list":44,"./internal/streams/destroy":45,"./internal/streams/from":47,"./internal/streams/state":49,"./internal/streams/stream":50,"_process":32,"buffer":6,"events":62,"inherits":28,"string_decoder/":60,"util":5}],41:[function(require,module,exports){
+},{"../errors":36,"./_stream_duplex":37,"./internal/streams/async_iterator":42,"./internal/streams/buffer_list":43,"./internal/streams/destroy":44,"./internal/streams/from":46,"./internal/streams/state":48,"./internal/streams/stream":49,"_process":31,"buffer":4,"events":62,"inherits":29,"string_decoder/":60,"util":3}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7978,7 +7937,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":37,"./_stream_duplex":38,"inherits":28}],42:[function(require,module,exports){
+},{"../errors":36,"./_stream_duplex":37,"inherits":29}],41:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -8678,7 +8637,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":37,"./_stream_duplex":38,"./internal/streams/destroy":45,"./internal/streams/state":49,"./internal/streams/stream":50,"_process":32,"buffer":6,"inherits":28,"util-deprecate":61}],43:[function(require,module,exports){
+},{"../errors":36,"./_stream_duplex":37,"./internal/streams/destroy":44,"./internal/streams/state":48,"./internal/streams/stream":49,"_process":31,"buffer":4,"inherits":29,"util-deprecate":61}],42:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -8888,7 +8847,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this)}).call(this,require('_process'))
-},{"./end-of-stream":46,"_process":32}],44:[function(require,module,exports){
+},{"./end-of-stream":45,"_process":31}],43:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -9099,7 +9058,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":6,"util":5}],45:[function(require,module,exports){
+},{"buffer":4,"util":3}],44:[function(require,module,exports){
 (function (process){(function (){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -9207,7 +9166,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this)}).call(this,require('_process'))
-},{"_process":32}],46:[function(require,module,exports){
+},{"_process":31}],45:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -9312,12 +9271,12 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":37}],47:[function(require,module,exports){
+},{"../../../errors":36}],46:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],48:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -9415,7 +9374,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":37,"./end-of-stream":46}],49:[function(require,module,exports){
+},{"../../../errors":36,"./end-of-stream":45}],48:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -9443,10 +9402,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":37}],50:[function(require,module,exports){
+},{"../../../errors":36}],49:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":62}],51:[function(require,module,exports){
+},{"events":62}],50:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -9457,7 +9416,79 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42,"./lib/internal/streams/end-of-stream.js":46,"./lib/internal/streams/pipeline.js":48}],52:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":37,"./lib/_stream_passthrough.js":38,"./lib/_stream_readable.js":39,"./lib/_stream_transform.js":40,"./lib/_stream_writable.js":41,"./lib/internal/streams/end-of-stream.js":45,"./lib/internal/streams/pipeline.js":47}],51:[function(require,module,exports){
+"use strict";
+/**
+ * Initialize backoff timer with `opts`.
+ *
+ * - `min` initial timeout in milliseconds [100]
+ * - `max` max timeout [10000]
+ * - `jitter` [0]
+ * - `factor` [2]
+ *
+ * @param {Object} opts
+ * @api public
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Backoff = void 0;
+function Backoff(opts) {
+    opts = opts || {};
+    this.ms = opts.min || 100;
+    this.max = opts.max || 10000;
+    this.factor = opts.factor || 2;
+    this.jitter = opts.jitter > 0 && opts.jitter <= 1 ? opts.jitter : 0;
+    this.attempts = 0;
+}
+exports.Backoff = Backoff;
+/**
+ * Return the backoff duration.
+ *
+ * @return {Number}
+ * @api public
+ */
+Backoff.prototype.duration = function () {
+    var ms = this.ms * Math.pow(this.factor, this.attempts++);
+    if (this.jitter) {
+        var rand = Math.random();
+        var deviation = Math.floor(rand * this.jitter * ms);
+        ms = (Math.floor(rand * 10) & 1) == 0 ? ms - deviation : ms + deviation;
+    }
+    return Math.min(ms, this.max) | 0;
+};
+/**
+ * Reset the number of attempts.
+ *
+ * @api public
+ */
+Backoff.prototype.reset = function () {
+    this.attempts = 0;
+};
+/**
+ * Set the minimum duration
+ *
+ * @api public
+ */
+Backoff.prototype.setMin = function (min) {
+    this.ms = min;
+};
+/**
+ * Set the maximum duration
+ *
+ * @api public
+ */
+Backoff.prototype.setMax = function (max) {
+    this.max = max;
+};
+/**
+ * Set the jitter
+ *
+ * @api public
+ */
+Backoff.prototype.setJitter = function (jitter) {
+    this.jitter = jitter;
+};
+
+},{}],52:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -9528,7 +9559,7 @@ Object.defineProperty(exports, "protocol", { enumerable: true, get: function () 
 
 module.exports = lookup;
 
-},{"./manager.js":53,"./socket.js":55,"./url.js":56,"debug":7,"socket.io-parser":58}],53:[function(require,module,exports){
+},{"./manager.js":53,"./socket.js":55,"./url.js":56,"debug":5,"socket.io-parser":58}],53:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -9558,7 +9589,7 @@ const engine_io_client_1 = require("engine.io-client");
 const socket_js_1 = require("./socket.js");
 const parser = __importStar(require("socket.io-parser"));
 const on_js_1 = require("./on.js");
-const backo2_1 = __importDefault(require("backo2"));
+const backo2_js_1 = require("./contrib/backo2.js");
 const component_emitter_1 = require("@socket.io/component-emitter");
 const debug_1 = __importDefault(require("debug")); // debug()
 const debug = debug_1.default("socket.io-client:manager"); // debug()
@@ -9581,7 +9612,7 @@ class Manager extends component_emitter_1.Emitter {
         this.reconnectionDelay(opts.reconnectionDelay || 1000);
         this.reconnectionDelayMax(opts.reconnectionDelayMax || 5000);
         this.randomizationFactor((_a = opts.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5);
-        this.backoff = new backo2_1.default({
+        this.backoff = new backo2_js_1.Backoff({
             min: this.reconnectionDelay(),
             max: this.reconnectionDelayMax(),
             jitter: this.randomizationFactor(),
@@ -9853,12 +9884,12 @@ class Manager extends component_emitter_1.Emitter {
      *
      * @private
      */
-    onclose(reason) {
+    onclose(reason, description) {
         debug("closed due to %s", reason);
         this.cleanup();
         this.backoff.reset();
         this._readyState = "closed";
-        this.emitReserved("close", reason);
+        this.emitReserved("close", reason, description);
         if (this._reconnection && !this.skipReconnect) {
             this.reconnect();
         }
@@ -9925,7 +9956,7 @@ class Manager extends component_emitter_1.Emitter {
 }
 exports.Manager = Manager;
 
-},{"./on.js":54,"./socket.js":55,"@socket.io/component-emitter":2,"backo2":3,"debug":7,"engine.io-client":10,"socket.io-parser":58}],54:[function(require,module,exports){
+},{"./contrib/backo2.js":51,"./on.js":54,"./socket.js":55,"@socket.io/component-emitter":1,"debug":5,"engine.io-client":12,"socket.io-parser":58}],54:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.on = void 0;
@@ -9971,7 +10002,6 @@ class Socket extends component_emitter_1.Emitter {
     constructor(io, nsp, opts) {
         super();
         this.connected = false;
-        this.disconnected = true;
         this.receiveBuffer = [];
         this.sendBuffer = [];
         this.ids = 0;
@@ -9984,6 +10014,12 @@ class Socket extends component_emitter_1.Emitter {
         }
         if (this.io._autoConnect)
             this.open();
+    }
+    /**
+     * Whether the socket is currently disconnected
+     */
+    get disconnected() {
+        return !this.connected;
     }
     /**
      * Subscribe to open, close and packet events
@@ -10073,6 +10109,7 @@ class Socket extends component_emitter_1.Emitter {
             debug("discard packet as the transport is not currently writable");
         }
         else if (this.connected) {
+            this.notifyOutgoingListeners(packet);
             this.packet(packet);
         }
         else {
@@ -10149,14 +10186,14 @@ class Socket extends component_emitter_1.Emitter {
      * Called upon engine `close`.
      *
      * @param reason
+     * @param description
      * @private
      */
-    onclose(reason) {
+    onclose(reason, description) {
         debug("close (%s)", reason);
         this.connected = false;
-        this.disconnected = true;
         delete this.id;
-        this.emitReserved("disconnect", reason);
+        this.emitReserved("disconnect", reason, description);
     }
     /**
      * Called with socket packet.
@@ -10179,14 +10216,10 @@ class Socket extends component_emitter_1.Emitter {
                 }
                 break;
             case socket_io_parser_1.PacketType.EVENT:
-                this.onevent(packet);
-                break;
             case socket_io_parser_1.PacketType.BINARY_EVENT:
                 this.onevent(packet);
                 break;
             case socket_io_parser_1.PacketType.ACK:
-                this.onack(packet);
-                break;
             case socket_io_parser_1.PacketType.BINARY_ACK:
                 this.onack(packet);
                 break;
@@ -10278,7 +10311,6 @@ class Socket extends component_emitter_1.Emitter {
         debug("socket connected with id %s", id);
         this.id = id;
         this.connected = true;
-        this.disconnected = false;
         this.emitBuffered();
         this.emitReserved("connect");
     }
@@ -10290,7 +10322,10 @@ class Socket extends component_emitter_1.Emitter {
     emitBuffered() {
         this.receiveBuffer.forEach((args) => this.emitEvent(args));
         this.receiveBuffer = [];
-        this.sendBuffer.forEach((packet) => this.packet(packet));
+        this.sendBuffer.forEach((packet) => {
+            this.notifyOutgoingListeners(packet);
+            this.packet(packet);
+        });
         this.sendBuffer = [];
     }
     /**
@@ -10444,17 +10479,121 @@ class Socket extends component_emitter_1.Emitter {
     listenersAny() {
         return this._anyListeners || [];
     }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback.
+     *
+     * @param listener
+     *
+     * <pre><code>
+     *
+     * socket.onAnyOutgoing((event, ...args) => {
+     *   console.log(event);
+     * });
+     *
+     * </pre></code>
+     *
+     * @public
+     */
+    onAnyOutgoing(listener) {
+        this._anyOutgoingListeners = this._anyOutgoingListeners || [];
+        this._anyOutgoingListeners.push(listener);
+        return this;
+    }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback. The listener is added to the beginning of the listeners array.
+     *
+     * @param listener
+     *
+     * <pre><code>
+     *
+     * socket.prependAnyOutgoing((event, ...args) => {
+     *   console.log(event);
+     * });
+     *
+     * </pre></code>
+     *
+     * @public
+     */
+    prependAnyOutgoing(listener) {
+        this._anyOutgoingListeners = this._anyOutgoingListeners || [];
+        this._anyOutgoingListeners.unshift(listener);
+        return this;
+    }
+    /**
+     * Removes the listener that will be fired when any event is emitted.
+     *
+     * @param listener
+     *
+     * <pre><code>
+     *
+     * const handler = (event, ...args) => {
+     *   console.log(event);
+     * }
+     *
+     * socket.onAnyOutgoing(handler);
+     *
+     * // then later
+     * socket.offAnyOutgoing(handler);
+     *
+     * </pre></code>
+     *
+     * @public
+     */
+    offAnyOutgoing(listener) {
+        if (!this._anyOutgoingListeners) {
+            return this;
+        }
+        if (listener) {
+            const listeners = this._anyOutgoingListeners;
+            for (let i = 0; i < listeners.length; i++) {
+                if (listener === listeners[i]) {
+                    listeners.splice(i, 1);
+                    return this;
+                }
+            }
+        }
+        else {
+            this._anyOutgoingListeners = [];
+        }
+        return this;
+    }
+    /**
+     * Returns an array of listeners that are listening for any event that is specified. This array can be manipulated,
+     * e.g. to remove listeners.
+     *
+     * @public
+     */
+    listenersAnyOutgoing() {
+        return this._anyOutgoingListeners || [];
+    }
+    /**
+     * Notify the listeners for each packet sent
+     *
+     * @param packet
+     *
+     * @private
+     */
+    notifyOutgoingListeners(packet) {
+        if (this._anyOutgoingListeners && this._anyOutgoingListeners.length) {
+            const listeners = this._anyOutgoingListeners.slice();
+            for (const listener of listeners) {
+                listener.apply(this, packet.data);
+            }
+        }
+    }
 }
 exports.Socket = Socket;
 
-},{"./on.js":54,"@socket.io/component-emitter":2,"debug":7,"socket.io-parser":58}],56:[function(require,module,exports){
+},{"./on.js":54,"@socket.io/component-emitter":1,"debug":5,"socket.io-parser":58}],56:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.url = void 0;
-const parseuri_1 = __importDefault(require("parseuri"));
+const engine_io_client_1 = require("engine.io-client");
 const debug_1 = __importDefault(require("debug")); // debug()
 const debug = debug_1.default("socket.io-client:url"); // debug()
 /**
@@ -10493,7 +10632,7 @@ function url(uri, path = "", loc) {
         }
         // parse
         debug("parse %s", uri);
-        obj = parseuri_1.default(uri);
+        obj = engine_io_client_1.parse(uri);
     }
     // make sure we treat `localhost:80` and `localhost` equally
     if (!obj.port) {
@@ -10519,7 +10658,7 @@ function url(uri, path = "", loc) {
 }
 exports.url = url;
 
-},{"debug":7,"parseuri":31}],57:[function(require,module,exports){
+},{"debug":5,"engine.io-client":12}],57:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reconstructPacket = exports.deconstructPacket = void 0;
@@ -10583,8 +10722,16 @@ exports.reconstructPacket = reconstructPacket;
 function _reconstructPacket(data, buffers) {
     if (!data)
         return data;
-    if (data && data._placeholder) {
-        return buffers[data.num]; // appropriate buffer (should be natural order anyway)
+    if (data && data._placeholder === true) {
+        const isIndexValid = typeof data.num === "number" &&
+            data.num >= 0 &&
+            data.num < buffers.length;
+        if (isIndexValid) {
+            return buffers[data.num]; // appropriate buffer (should be natural order anyway)
+        }
+        else {
+            throw new Error("illegal attachments");
+        }
     }
     else if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
@@ -10631,6 +10778,14 @@ var PacketType;
  */
 class Encoder {
     /**
+     * Encoder constructor
+     *
+     * @param {function} replacer - custom replacer to pass down to JSON.parse
+     */
+    constructor(replacer) {
+        this.replacer = replacer;
+    }
+    /**
      * Encode a packet as a single string if non-binary, or as a
      * buffer sequence, depending on packet type.
      *
@@ -10671,7 +10826,7 @@ class Encoder {
         }
         // json data
         if (null != obj.data) {
-            str += JSON.stringify(obj.data);
+            str += JSON.stringify(obj.data, this.replacer);
         }
         debug("encoded %j as %s", obj, str);
         return str;
@@ -10696,8 +10851,14 @@ exports.Encoder = Encoder;
  * @return {Object} decoder
  */
 class Decoder extends component_emitter_1.Emitter {
-    constructor() {
+    /**
+     * Decoder constructor
+     *
+     * @param {function} reviver - custom reviver to pass down to JSON.stringify
+     */
+    constructor(reviver) {
         super();
+        this.reviver = reviver;
     }
     /**
      * Decodes an encoded packet string into packet JSON.
@@ -10707,6 +10868,9 @@ class Decoder extends component_emitter_1.Emitter {
     add(obj) {
         let packet;
         if (typeof obj === "string") {
+            if (this.reconstructor) {
+                throw new Error("got plaintext data when reconstructing a packet");
+            }
             packet = this.decodeString(obj);
             if (packet.type === PacketType.BINARY_EVENT ||
                 packet.type === PacketType.BINARY_ACK) {
@@ -10798,7 +10962,7 @@ class Decoder extends component_emitter_1.Emitter {
         }
         // look up json data
         if (str.charAt(++i)) {
-            const payload = tryParse(str.substr(i));
+            const payload = this.tryParse(str.substr(i));
             if (Decoder.isPayloadValid(p.type, payload)) {
                 p.data = payload;
             }
@@ -10808,6 +10972,14 @@ class Decoder extends component_emitter_1.Emitter {
         }
         debug("decoded %s as %j", str, p);
         return p;
+    }
+    tryParse(str) {
+        try {
+            return JSON.parse(str, this.reviver);
+        }
+        catch (e) {
+            return false;
+        }
     }
     static isPayloadValid(type, payload) {
         switch (type) {
@@ -10835,14 +11007,6 @@ class Decoder extends component_emitter_1.Emitter {
     }
 }
 exports.Decoder = Decoder;
-function tryParse(str) {
-    try {
-        return JSON.parse(str);
-    }
-    catch (e) {
-        return false;
-    }
-}
 /**
  * A manager of a binary event's 'buffer sequence'. Should
  * be constructed whenever a packet of type BINARY_EVENT is
@@ -10884,7 +11048,7 @@ class BinaryReconstructor {
     }
 }
 
-},{"./binary.js":57,"./is-binary.js":59,"@socket.io/component-emitter":2,"debug":7}],59:[function(require,module,exports){
+},{"./binary.js":57,"./is-binary.js":59,"@socket.io/component-emitter":1,"debug":5}],59:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.hasBinary = exports.isBinary = void 0;
@@ -11238,7 +11402,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":35}],61:[function(require,module,exports){
+},{"safe-buffer":34}],61:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -11835,81 +11999,11 @@ function functionBindPolyfill(context) {
 }
 
 },{}],63:[function(require,module,exports){
-'use strict';
-
-var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
-  , length = 64
-  , map = {}
-  , seed = 0
-  , i = 0
-  , prev;
-
-/**
- * Return a string representing the specified number.
- *
- * @param {Number} num The number to convert.
- * @returns {String} The string representation of the number.
- * @api public
- */
-function encode(num) {
-  var encoded = '';
-
-  do {
-    encoded = alphabet[num % length] + encoded;
-    num = Math.floor(num / length);
-  } while (num > 0);
-
-  return encoded;
-}
-
-/**
- * Return the integer value specified by the given string.
- *
- * @param {String} str The string to convert.
- * @returns {Number} The integer value represented by the string.
- * @api public
- */
-function decode(str) {
-  var decoded = 0;
-
-  for (i = 0; i < str.length; i++) {
-    decoded = decoded * length + map[str.charAt(i)];
-  }
-
-  return decoded;
-}
-
-/**
- * Yeast: A tiny growing id generator.
- *
- * @returns {String} A unique id.
- * @api public
- */
-function yeast() {
-  var now = encode(+new Date());
-
-  if (now !== prev) return seed = 0, prev = now;
-  return now +'.'+ encode(seed++);
-}
-
-//
-// Map each character to its index.
-//
-for (; i < length; i++) map[alphabet[i]] = i;
-
-//
-// Expose the `yeast`, `encode` and `decode` functions.
-//
-yeast.encode = encode;
-yeast.decode = decode;
-module.exports = yeast;
-
-},{}],64:[function(require,module,exports){
 const SimplePeerWrapper = require('./simple-peer-wrapper.js');
 
 module.exports = SimplePeerWrapper;
 
-},{"./simple-peer-wrapper.js":66}],65:[function(require,module,exports){
+},{"./simple-peer-wrapper.js":65}],64:[function(require,module,exports){
 const Peer = require('simple-peer');
 
 class SimplePeerClientWrapper {
@@ -12123,7 +12217,7 @@ class SimplePeerClientWrapper {
 
 module.exports = SimplePeerClientWrapper;
 
-},{"simple-peer":36}],66:[function(require,module,exports){
+},{"simple-peer":35}],65:[function(require,module,exports){
 const SocketIOClientWrapper = require('./socket-io-client-wrapper.js');
 
 class SimplePeerWrapper {
@@ -12155,7 +12249,7 @@ class SimplePeerWrapper {
 
 module.exports = SimplePeerWrapper;
 
-},{"./socket-io-client-wrapper.js":67}],67:[function(require,module,exports){
+},{"./socket-io-client-wrapper.js":66}],66:[function(require,module,exports){
 const io = require('socket.io-client');
 const SimplePeerClientWrapper = require('./simple-peer-client-wrapper.js');
 
@@ -12336,5 +12430,5 @@ class SocketIOClientWrapper {
 
 module.exports = SocketIOClientWrapper;
 
-},{"./simple-peer-client-wrapper.js":65,"socket.io-client":52}]},{},[64])(64)
+},{"./simple-peer-client-wrapper.js":64,"socket.io-client":52}]},{},[63])(63)
 });
