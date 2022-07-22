@@ -11925,7 +11925,11 @@ class SimplePeerClientWrapper {
     // this.onTrackCallback;
     this.onCloseCallback;
     this.onErrorCallback;
-    this.simplePeerOptions = simplePeerOptions;
+    this.simplePeerOptions;
+
+    if (typeof simplePeerOptions !== 'undefined') {
+      this.simplePeerOptions = simplePeerOptions;
+    }
   }
 
   setlocalStream(stream) {
@@ -12051,14 +12055,15 @@ class SimplePeerClientWrapper {
       options.stream = this.localStream;
     }
 
-    const spOptions = Object.entries(this.simplePeerOptions);
+    if (typeof this.simplePeerOptions !== 'undefined') {
+      const spOptions = Object.entries(this.simplePeerOptions);
 
-    if (spOptions.length > 0) {
-      for (const [key, value] of spOptions) {
-        options[key] = value;
+      if (spOptions.length > 0) {
+        for (const [key, value] of spOptions) {
+          options[key] = value;
+        }
       }
     }
-
     return options;
   }
 
@@ -12159,7 +12164,7 @@ class SocketIOClientWrapper {
     stream,
     serverUrl,
     debug = false,
-    simplePeerOptions = {},
+    simplePeerOptions,
   } = {}) {
     this.debug = debug;
 
@@ -12199,6 +12204,9 @@ class SocketIOClientWrapper {
     this.socket.on('log', (array) => this._handleLog(array));
     this.socket.on('message', (message) =>
       this._handleMessage(message),
+    );
+    this.socket.on('simple peer options', (options) =>
+      this._setSimplePeerOptionsFromServer(options),
     );
 
     this._startSocketCommunication();
@@ -12317,6 +12325,12 @@ class SocketIOClientWrapper {
   _emitSocketMessage(message) {
     this.debug && console.log('Client sending message: ', message);
     this.socket.emit('message', message);
+  }
+
+  _setSimplePeerOptionsFromServer(options) {
+    this.debug &&
+      console.log('Setting Simple Peer Options from Server.');
+    this.peerClient.simplePeerOptions = options;
   }
 }
 

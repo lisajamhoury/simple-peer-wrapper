@@ -169,6 +169,8 @@ simplePeerOptions: {
 },
 ```
 
+`simplePeerOptions` can also be provided on the server side via simple-peer-server. Any simple-peer options provided by the server will override the default options in simple-peer AND any options provided via simple-peer-wrapper client.
+
 ## `.connect()`
 
 Creates a peer connection between the client and all other parties connected to the signaling server. Each connection is one-to-one, creating a mesh topology.

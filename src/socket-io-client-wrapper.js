@@ -6,7 +6,7 @@ class SocketIOClientWrapper {
     stream,
     serverUrl,
     debug = false,
-    simplePeerOptions = {},
+    simplePeerOptions,
   } = {}) {
     this.debug = debug;
 
@@ -46,6 +46,9 @@ class SocketIOClientWrapper {
     this.socket.on('log', (array) => this._handleLog(array));
     this.socket.on('message', (message) =>
       this._handleMessage(message),
+    );
+    this.socket.on('simple peer options', (options) =>
+      this._setSimplePeerOptionsFromServer(options),
     );
 
     this._startSocketCommunication();
@@ -164,6 +167,12 @@ class SocketIOClientWrapper {
   _emitSocketMessage(message) {
     this.debug && console.log('Client sending message: ', message);
     this.socket.emit('message', message);
+  }
+
+  _setSimplePeerOptionsFromServer(options) {
+    this.debug &&
+      console.log('Setting Simple Peer Options from Server.');
+    this.peerClient.simplePeerOptions = options;
   }
 }
 

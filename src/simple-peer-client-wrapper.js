@@ -13,7 +13,11 @@ class SimplePeerClientWrapper {
     // this.onTrackCallback;
     this.onCloseCallback;
     this.onErrorCallback;
-    this.simplePeerOptions = simplePeerOptions;
+    this.simplePeerOptions;
+
+    if (typeof simplePeerOptions !== 'undefined') {
+      this.simplePeerOptions = simplePeerOptions;
+    }
   }
 
   setlocalStream(stream) {
@@ -139,14 +143,15 @@ class SimplePeerClientWrapper {
       options.stream = this.localStream;
     }
 
-    const spOptions = Object.entries(this.simplePeerOptions);
+    if (typeof this.simplePeerOptions !== 'undefined') {
+      const spOptions = Object.entries(this.simplePeerOptions);
 
-    if (spOptions.length > 0) {
-      for (const [key, value] of spOptions) {
-        options[key] = value;
+      if (spOptions.length > 0) {
+        for (const [key, value] of spOptions) {
+          options[key] = value;
+        }
       }
     }
-
     return options;
   }
 
