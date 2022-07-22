@@ -24,7 +24,7 @@ Default STUN servers are provided by simple-peer. Although they can be overwritt
 
 To learn more about signaling, STUN, and TURN servers, I recommend [this article by Sam Dutton](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/). If you are in need of a TURN server, you may find this article on [How to set up and configure your own TURN server using Coturn](https://gabrieltanner.org/blog/turn-server) by Gabriel Turner helpful. You could also check out paid services like [Twilio's Network Traversal Service](https://www.twilio.com/stun-turn).
 
-Once you have your TURN servers setup, see the documentation below for how to include add them to your peer connections.
+Once you have your TURN servers setup, see the documentation below for how to add them to your peer connections.
 
 # Usage
 
